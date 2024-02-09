@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>~ cathode ~</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="stylesheet" href="./static/codemirror.min.css">
+  <link rel="stylesheet" href="./static/monokai.min.css">
+  <link rel="stylesheet" href="./app.css">
+  <script defer src="./app.js" type="module"></script>
+</head>
+<body>
+
+<object type="image/svg+xml" data="static/icons.svg"
+        onload="this.parentNode.replaceChild(this.contentDocument.documentElement, this)">
+</object>
+
+<div id="app-lr">
+  <div id="app-left">
+    <div id="editorHost"><div id="editorBg"></div></div>
+  </div>
+  <div id="app-right">
+    <div id="previewHost" class="preview">
+      <iframe id="previewFrame" class="preview" src="http://localhost:8081"></iframe>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

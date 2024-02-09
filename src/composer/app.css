@@ -1,0 +1,183 @@
+/* Defines */
+:root {
+  --previewWidth: 720px;
+  --previewHeight: 576px;
+  --fntMono: "IBM Plex Mono", monospace;
+  --fntSans: "IBM Plex Sans", sans-serif;
+  --fntSizeHeading: 24px;
+  --fntSizeTitle: 18px;
+  --fntSizeBase: 15px;
+  --fntSizeSmaller: 14px;
+  --clrText: #ccc;
+  --clrTextFaint: #888;
+  --clrTextFainter: #777;
+  --clrTextFaintest: #444;
+  --clrTextTerminal: #8d8b76;
+  --clrTextError: #b63939;
+  --clrBodyBg: 0,0,0;
+  --clrPanelBg: #202020;
+  --clrControl: #9f7e52;
+  --clrControlHover: #d08e4c;
+}
+
+/* Global overrides */
+* { box-sizing: border-box; scrollbar-color: #333 var(--clrPanelBg); }
+::-webkit-scrollbar { background-color: var(--clrPanelBg); width: 8px; }
+::-webkit-scrollbar-thumb { background-color: #333; }
+
+a { color: #8bb3e0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+  display: block; border: none; margin: 0; padding: 0; background-color: transparent;
+  & svg { width: 100%; height: 100%; }
+  & svg * { stroke: var(--clrControl); }
+  &:hover svg * { stroke: var(--clrControlHover); }
+  &[disabled] svg * { stroke: var(--clrTextFainter); }
+}
+
+& input[type=text] {
+  box-shadow: none; -webkit-box-shadow: none; -webkit-appearance: none; outline: none;
+  -webkit-border-radius: 0px; border-radius: 0; border: none;
+  font-family: inherit; color: var(--clrText); background-color: var(--clrPanelBg);
+}
+
+/* Layout, specifics */
+html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+html { background-color: rgb(var(--clrBodyBg)); padding: 20px; }
+body {
+  font-family: var(--fntMono); font-size: var(--fntSizeBase);
+  color: var(--clrText);
+}
+
+#app-lr {
+  width: 100%; display: flex; align-items: flex-start; gap: 20px; height: 100%;
+}
+#app-left { flex-grow: 1; height: 100%; }
+#app-right { border: 1px solid var(--clrTextFainter); }
+#previewFrame { border: 0; padding: 0; margin: 0; }
+.preview { height: var(--previewHeight); width: var(--previewWidth); }
+
+
+#editorHost {
+  position: relative; background-color: transparent;
+  width: 100%; height: 100%;
+  border: 1px solid var(--clrTextFainter);
+}
+#editorBg {
+  position: absolute; width: 100%; height: 100%;
+  background-color: black; opacity: 0.6;
+  transition: background-color ease-out 1.5s;
+}
+#editorBg.error { background-color: red; transition: none; }
+#editorBg.apply { background-color: #aaa; transition: none; }
+#editorHost .CodeMirror.cm-s-monokai {
+  height: 100%; font-family: var(--fntMono); font-size: var(--fntSizeBase);
+  color: var(--clrText);
+  background-color: transparent;
+  & .CodeMirror-gutters { background-color: transparent; }
+  & .cm-scroller { font-family: var(--fntMono); }
+  & .cm-gutters { background-color: transparent; border: none; }
+  & .cm-activeLineGutter { background-color: #303030; }
+  & .cm-content { background-color: transparent; }
+  & .cm-activeLine { background-color: #ffffff10; }
+  & .cm-cursor { border-left: 1px solid #aaa; border-right: 1px solid #aaa; }
+  & .cm-selectionMatch { background-color: unset; }
+  & .cm-panels { background-color: transparent; }
+  & .cm-panels.cm-panels-bottom {
+    border-top: 2px solid var(--clrTextFainter); padding: 3px; height: 24px;
+  }
+  & .cm-panels p { color: var(--clrText); }
+  & .cm-highlight-bad { background: rgba(255, 128, 128, 0.3); }
+  & .cm-highlight-good { background: rgba(128, 255, 128, 0.3); }
+  & .cm-comment { color: #a4c7a4; }
+  & .cm-variable {color: var(--clrText); }
+}
+#editorHost {
+  & .CodeMirror-linenumber { color: var(--clrTextFainter); }
+}
+
+
+  /*
+  .editor {
+    position: fixed; top: 96px; right: 32px; left: 32px; bottom: 32px;
+    width: calc(50% - 32px);
+    background-color: var(--clrPanelBg); font-size: var(--fntSizeSmaller);
+    & #editorHost { height: 100%; }
+  }
+
+  .cm-editor {
+    height: 100%; background-color: var(--clrPanelBg);
+    & .cm-scroller { font-family: var(--fntMono); }
+    & .cm-gutters { background-color: transparent; border: none; }
+    & .cm-activeLineGutter { background-color: #303030; }
+    & .cm-content { background-color: transparent; }
+    & .cm-activeLine { background-color: #ffffff10; }
+    & .cm-cursor { border-left: 1px solid #aaa; border-right: 1px solid #aaa; }
+    & .cm-selectionMatch { background-color: unset; }
+    & .cm-panels { background-color: transparent; }
+    & .cm-panels.cm-panels-bottom {
+      border-top: 2px solid var(--clrTextFainter); padding: 3px; height: 24px;
+    }
+    & .cm-panels p { color: var(--clrText); }
+    & .cm-highlight-bad { background: rgba(255, 128, 128, 0.3); }
+    & .cm-highlight-good { background: rgba(128, 255, 128, 0.3); }
+  }
+  #editorHost .cm-panels p { color: var(--clrText); }
+
+  .cm-editor, .cm-editor.cm-focused {
+    & .cm-scroller .cm-selectionLayer .cm-selectionBackground { background-color: #90909044; }
+  }
+
+  */
+
+
+/* ibm-plex-mono-regular - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('static/ibm-plex-mono-v19-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* ibm-plex-mono-600 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  src: url('static/ibm-plex-mono-v19-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* ibm-plex-sans-regular - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('static/ibm-plex-sans-v19-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* ibm-plex-sans-italic - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'IBM Plex Sans';
+  font-style: italic;
+  font-weight: 400;
+  src: url('static/ibm-plex-sans-v19-latin-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* ibm-plex-sans-600 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: url('static/ibm-plex-sans-v19-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* ibm-plex-sans-600italic - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'IBM Plex Sans';
+  font-style: italic;
+  font-weight: 600;
+  src: url('static/ibm-plex-sans-v19-latin-600italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+

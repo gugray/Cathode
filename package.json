@@ -1,0 +1,19 @@
+{
+  "name": "cathode",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Shader live coding environment. Maybe for a CRT screen.",
+  "license": "MIT",
+  "author": {
+    "name": "Gábor L Ugray",
+    "email": "gabor.reads.this@gmail.com"
+  },
+  "dependencies": {
+    "codemirror": "^5.65.16",
+    "twgl.js": "^5.5.3"
+  },
+  "devDependencies": {
+    "@jgoz/esbuild-plugin-livereload": "^2.0.3",
+    "esbuild": "^0.20.0"
+  }
+}

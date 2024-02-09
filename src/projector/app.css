@@ -1,0 +1,48 @@
+/* Defines */
+:root {
+  --fntMono: "IBM Plex Mono", monospace;
+  --fntSans: "IBM Plex Sans", sans-serif;
+  --fntSizeHeading: 24px;
+  --fntSizeTitle: 18px;
+  --fntSizeBase: 16px;
+  --fntSizeSmaller: 14px;
+  --clrText: #ccc;
+  --clrTextFaint: #888;
+  --clrTextFainter: #444;
+  --clrTextTerminal: #8d8b76;
+  --clrTextError: #b63939;
+  --clrBodyBg: 0,0,0;
+  --clrPanelBg: #202020;
+  --clrControl: #9f7e52;
+  --clrControlHover: #d08e4c;
+}
+
+/* Global overrides */
+* { box-sizing: border-box; scrollbar-color: #333 var(--clrPanelBg); }
+::-webkit-scrollbar { background-color: var(--clrPanelBg); width: 8px; }
+::-webkit-scrollbar-thumb { background-color: #333; }
+
+a { color: #8bb3e0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+  display: block; border: none; margin: 0; padding: 0; background-color: transparent;
+  & svg { width: 100%; height: 100%; }
+  & svg * { stroke: var(--clrControl); }
+  &:hover svg * { stroke: var(--clrControlHover); }
+  &[disabled] svg * { stroke: var(--clrTextFainter); }
+}
+
+& input[type=text] {
+  box-shadow: none; -webkit-box-shadow: none; -webkit-appearance: none; outline: none;
+  -webkit-border-radius: 0px; border-radius: 0; border: none;
+  font-family: inherit; color: var(--clrText); background-color: var(--clrPanelBg);
+}
+
+/* Layout, specifics */
+html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }
+html { background-color: rgb(var(--clrBodyBg)); }
+body {
+  font-family: var(--fntMono); font-size: var(--fntSizeBase);
+  color: var(--clrText);
+}
