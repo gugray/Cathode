@@ -57,6 +57,7 @@ async function runComposer() {
 
   await context.watch();
   await context.serve({port: composerPort});
+  console.log(`Serving composer on port ${projectorPort}`);
 
   // If only building
   // await context.rebuild();
@@ -92,6 +93,7 @@ async function runProjector() {
 
   await context.watch();
   await context.serve({port: projectorPort});
+  console.log(`Serving projector on port ${projectorPort}`);
 }
 
 void server.run(serverPort);

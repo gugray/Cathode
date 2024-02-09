@@ -1,12 +1,13 @@
 import {Editor} from "./editor.js";
 
+const serverUrl = "http://localhost:8090/shaders/main/frag";
 void init();
 
 let editor;
 
 async function init() {
   initEditor();
-  editor.setValue("Haha!");
+  editor.cm.doc.setValue("Haha!");
 }
 
 
@@ -24,11 +25,6 @@ function initEditor() {
       else editor.cm.display.input.focus();
       handled = true;
     }
-    // if (e.metaKey && e.key == "s") {
-    //   H.saveHistory(e.shiftKey);
-    //   if (e.shiftKey) seqId = 0;
-    //   handled = true;
-    // }
     if (handled) {
       e.preventDefault();
       return false;
@@ -36,6 +32,15 @@ function initEditor() {
   });
 }
 
-function submitShader() {
-
+async function submitShader() {
+  const resp = await fetch(serverUrl, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: editor.cm.doc.getValue(),
+  });
+  if (resp.status >= 300) {
+    console.error(`Failed to POST shader; request returned ${resp.status}`);
+    // TODO: UI error report
+  }
+  //await response.text();
 }

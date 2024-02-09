@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "codemirror": "^5.65.16",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "twgl.js": "^5.5.3"
   },
   "devDependencies": {
