@@ -1,6 +1,7 @@
 import * as esbuild from "esbuild"
+import glsl from "./glsl-plugin.js"
 import * as server from "./src/server.js"
-import { livereloadPlugin } from "@jgoz/esbuild-plugin-livereload";
+import { livereloadPlugin } from "@jgoz/esbuild-plugin-livereload"
 
 const composerPort = 8080;
 const projectorPort = 8081;
@@ -36,6 +37,7 @@ async function runComposer() {
     "src/composer/static/*",
   ];
   const plugins = [
+    glsl(),
     livereloadPlugin({port: 53000}),
   ];
   const context = await esbuild.context({
@@ -72,6 +74,7 @@ async function runProjector() {
     "src/projector/app.js",
   ];
   const plugins = [
+    glsl(),
     livereloadPlugin({port: 53001}),
   ];
   const context = await esbuild.context({

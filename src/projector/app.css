@@ -4,8 +4,7 @@
   --fntSans: "IBM Plex Sans", sans-serif;
   --fntSizeHeading: 24px;
   --fntSizeTitle: 18px;
-  --fntSizeBase: 16px;
-  --fntSizeSmaller: 14px;
+  --fntSizeBase: 14px;
   --clrText: #ccc;
   --clrTextFaint: #888;
   --clrTextFainter: #444;
@@ -45,4 +44,9 @@ html { background-color: rgb(var(--clrBodyBg)); }
 body {
   font-family: var(--fntMono); font-size: var(--fntSizeBase);
   color: var(--clrText);
+}
+#dbg { margin: 20px; padding: 0; position: fixed; bottom: 0; right: 0; }
+#webgl-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: black;
 }
