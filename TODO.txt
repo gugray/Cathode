@@ -1,0 +1,5 @@
+-- Play/pause
+-- Error feedback
+-- Sizes
+-- Message "enum"
+-- Two-pass render; infuse previous texture for feedback effects

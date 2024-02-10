@@ -1,20 +1,22 @@
 import sSweepVert from "../shader/sweep-vert.glsl";
 import sMainFrag from "../shader/main-frag.glsl";
-import sGist from "../shader/gist.glsl";
+import sDefaultGist from "../shader/default-gist.glsl";
 import * as twgl from "twgl.js";
+import { truncate } from "../common/utils.js";
 
-const serverUrl = "http://localhost:8090/shaders/main/frag";
-const checkInterval = 50;
-void init();
+const socketUrl = "ws://localhost:8090/proj";
+const logComms = true;
+
+init();
 
 let webGLCanvas, gl, w, h;
-let sFrag;
+let socket;
+let sGist;
 let sweepArrays, sweepBufferInfo;
 let progiMain;
 let animating = false;
-let seq = -1;
 
-async function init() {
+function init() {
 
   // 3D WebGL canvas, and twgl
   webGLCanvas = document.getElementById("webgl-canvas");
@@ -32,10 +34,43 @@ async function init() {
     resizeCanvas();
   });
 
-  sFrag = buildInitialShader();
-  compilePrograms();
-  requestAnimationFrame(frame);
-  setInterval(checkShaders, checkInterval);
+  initSocket();
+}
+
+function initSocket() {
+  socket = new WebSocket(socketUrl);
+  socket.addEventListener("open", () => {
+    if (logComms) console.log("[PROJ] Socket open");
+    requestActiveSketch();
+  });
+  socket.addEventListener("message", (event) => {
+    const msgStr = event.data;
+    if (logComms) console.log(`[PROJ] Message: ${truncate(msgStr, 64)}`);
+    const msg = JSON.parse(msgStr);
+    handleSocketMessage(msg);
+  });
+  socket.addEventListener("close", () => {
+    if (logComms) console.log("[PROJ] Socket closed");
+    socket = null;
+  });
+}
+
+function requestActiveSketch() {
+  const msg = {
+    action: "get-active-sketch",
+  };
+  socket.send(JSON.stringify(msg));
+}
+
+function handleSocketMessage(msg) {
+  if (msg.action == "sketch") {
+    if (!msg.sketch.hasOwnProperty("gist"))
+      return;
+    updateGist(msg.sketch.gist);
+  }
+  else if (msg.action == "sketch-gist") {
+    updateGist(msg.gist);
+  }
 }
 
 function resizeCanvas() {
@@ -47,25 +82,12 @@ function resizeCanvas() {
   h = webGLCanvas.height = elmHeight * devicePixelRatio;
 }
 
-async function checkShaders() {
-  const url = `${serverUrl}?seq=${seq}`;
-  const resp = await fetch(url, { method: "GET" });
-  if (resp.status == 304) return;
-  else if (resp.status != 200) {
-    console.error(`Failed to query for shader update; status: ${resp.status}`);
-    return;
-  }
-  const data = await resp.json();
-  seq = data.seq;
-  sFrag = data.val;
+function updateGist(newGist) {
+  const isFirstUpdate = sGist == null;
+  sGist = newGist;
   compilePrograms();
-  if (!animating)
+  if (isFirstUpdate || !animating)
     requestAnimationFrame(frame);
-}
-
-function buildInitialShader() {
-  const ph = "// GIST.GLSL"; // Placeholder text
-  return sMainFrag.replace(ph, sGist);
 }
 
 function compilePrograms() {
@@ -73,7 +95,9 @@ function compilePrograms() {
   const del = pi => { if (pi && pi.program) gl.deleteProgram(pi.program); }
   const recreate = (v, f) => twgl.createProgramInfo(gl, [v, f]);
 
-  const npMain = recreate(sSweepVert, sFrag);
+  const ph = "// GIST.GLSL"; // Placeholder text
+  const frag = sMainFrag.replace(ph, sGist);
+  const npMain = recreate(sSweepVert, frag);
 
   if (!npMain) {
     // TODO: Signal error via server

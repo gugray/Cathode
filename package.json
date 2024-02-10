@@ -12,7 +12,8 @@
     "codemirror": "^5.65.16",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "twgl.js": "^5.5.3"
+    "twgl.js": "^5.5.3",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@jgoz/esbuild-plugin-livereload": "^2.0.3",
