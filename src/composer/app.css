@@ -14,8 +14,9 @@
   --clrTextFaintest: #444;
   --clrTextTerminal: #8d8b76;
   --clrTextError: #b63939;
-  --clrBodyBg: 0,0,0;
-  --clrPanelBg: #202020;
+  --clrBodyBg: #181818;
+  --clrPanelBg: #282828;
+  --clrEditorBg: #282828;
   --clrControl: #9f7e52;
   --clrControlHover: #d08e4c;
 }
@@ -42,31 +43,46 @@ button {
   font-family: inherit; color: var(--clrText); background-color: var(--clrPanelBg);
 }
 
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
 /* Layout, specifics */
 html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
-html { background-color: rgb(var(--clrBodyBg)); padding: 20px; }
+html { background-color: var(--clrBodyBg); padding: 10px; }
 body {
   font-family: var(--fntMono); font-size: var(--fntSizeBase);
   color: var(--clrText);
 }
 
-#app-lr {
-  width: 100%; display: flex; align-items: flex-start; gap: 20px; height: 100%;
+#app { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+#app-top {
+  height: 48px; background-color: var(--clrPanelBg); border: 1px solid var(--clrTextFaintest);
+  position: relative; color: var(--clrControl); user-select: none;
+  & svg * { stroke: var(--clrControl); }
 }
+#app-lr { width: 100%; height: 100%; display: flex; align-items: flex-start; gap: 10px; }
 #app-left { flex-grow: 1; height: 100%; }
-#app-right { border: 1px solid var(--clrTextFainter); }
+#app-right { border: 1px solid var(--clrTextFaintest); }
 #previewFrame { border: 0; padding: 0; margin: 0; }
 .preview { height: var(--previewHeight); width: var(--previewWidth); }
 
+#emblem {
+  width: 40px; height: 40px; position: absolute; left: 5px; top: 2px;
+  animation: rotate 16s linear infinite;
+}
+h1 { margin: 7px 0 0 60px; font-size: 20px; font-weight: normal; }
 
 #editorHost {
   position: relative; background-color: transparent;
   width: 100%; height: 100%;
-  border: 1px solid var(--clrTextFainter);
+  border: 1px solid var(--clrTextFaintest);
 }
 #editorBg {
   position: absolute; width: 100%; height: 100%;
-  background-color: black; opacity: 0.6;
+  background-color: black; opacity: 0.0;
   transition: background-color ease-out 1.5s;
 }
 #editorBg.error { background-color: red; transition: none; }
@@ -74,7 +90,7 @@ body {
 #editorHost .CodeMirror.cm-s-monokai {
   height: 100%; font-family: var(--fntMono); font-size: var(--fntSizeBase);
   color: var(--clrText);
-  background-color: transparent;
+  background-color: var(--clrEditorBg);
   & .CodeMirror-gutters { background-color: transparent; }
   & .cm-scroller { font-family: var(--fntMono); }
   & .cm-gutters { background-color: transparent; border: none; }
@@ -98,38 +114,6 @@ body {
 }
 
 
-  /*
-  .editor {
-    position: fixed; top: 96px; right: 32px; left: 32px; bottom: 32px;
-    width: calc(50% - 32px);
-    background-color: var(--clrPanelBg); font-size: var(--fntSizeSmaller);
-    & #editorHost { height: 100%; }
-  }
-
-  .cm-editor {
-    height: 100%; background-color: var(--clrPanelBg);
-    & .cm-scroller { font-family: var(--fntMono); }
-    & .cm-gutters { background-color: transparent; border: none; }
-    & .cm-activeLineGutter { background-color: #303030; }
-    & .cm-content { background-color: transparent; }
-    & .cm-activeLine { background-color: #ffffff10; }
-    & .cm-cursor { border-left: 1px solid #aaa; border-right: 1px solid #aaa; }
-    & .cm-selectionMatch { background-color: unset; }
-    & .cm-panels { background-color: transparent; }
-    & .cm-panels.cm-panels-bottom {
-      border-top: 2px solid var(--clrTextFainter); padding: 3px; height: 24px;
-    }
-    & .cm-panels p { color: var(--clrText); }
-    & .cm-highlight-bad { background: rgba(255, 128, 128, 0.3); }
-    & .cm-highlight-good { background: rgba(128, 255, 128, 0.3); }
-  }
-  #editorHost .cm-panels p { color: var(--clrText); }
-
-  .cm-editor, .cm-editor.cm-focused {
-    & .cm-scroller .cm-selectionLayer .cm-selectionBackground { background-color: #90909044; }
-  }
-
-  */
 
 
 /* ibm-plex-mono-regular - latin */
