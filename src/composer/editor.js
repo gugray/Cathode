@@ -24,7 +24,7 @@ class Editor {
 
     this.parent = parent;
     this.onSubmit = null;
-    this.onFullScreen = null;
+    this.onToggleAnimate = null;
 
     this.cm = CodeMirror(parent, {
       value: "void hello() {}",
@@ -45,7 +45,7 @@ class Editor {
       autofocus: true,
       extraKeys: {
         "Cmd-Enter": () => this.onSubmit && this.onSubmit(),
-        "Shift-Cmd-Enter": () => this.onFullScreen && this.onFullScreen(),
+        "Shift-Cmd-Enter": () => this.onToggleAnimate && this.onToggleAnimate(),
       },
     });
 

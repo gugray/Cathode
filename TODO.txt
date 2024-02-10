@@ -1,5 +1,7 @@
--- Play/pause
--- Error feedback
--- Sizes
--- Message "enum"
 -- Two-pass render; infuse previous texture for feedback effects
+-- Audio (FFT) input
+-- Movie sequences
+
+-- Success confirm flash
+-- Editor colors; matching brackets w/BG
+

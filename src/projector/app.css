@@ -45,8 +45,19 @@ body {
   font-family: var(--fntMono); font-size: var(--fntSizeBase);
   color: var(--clrText);
 }
-#dbg { margin: 20px; padding: 0; position: fixed; bottom: 0; right: 0; }
+
 #webgl-canvas {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background-color: black;
+}
+
+#dbg { margin: 20px; padding: 0; position: fixed; bottom: 0; right: 0; }
+
+#cmd-area {
+  margin: 0; padding: 20px; position: fixed; top: 0; right: 0; width: 88px; height: 88px;
+  & svg { cursor: pointer; visibility: hidden; width: 48px; height: 48px; float: right; }
+  & svg * { stroke: var(--clrControl); }
+}
+#cmd-area:hover {
+  & svg { visibility: visible; }
 }

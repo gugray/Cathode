@@ -5,6 +5,7 @@ import cors from "cors";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { truncate } from "./common/utils.js";
+import { ACTION } from "./common/actions.js";
 
 const dataDir = "./data";
 let activeSketch = {};
@@ -78,9 +79,6 @@ export async function run(port) {
     });
   });
 
-  // app.post("/shaders/:name/:sub", express.text(), handlePostShader);
-  // app.get("/shaders/:name/:sub", handleGetShader);
-
   // Run
   try {
     await listen(server, port);
@@ -100,34 +98,41 @@ function listen(server, port) {
 }
 
 function handleComposerMessage(msg) {
-  if (msg.action == "get-active-sketch") {
+  if (msg.action == ACTION.GetActiveSketch) {
     const resp = {
-      action: "sketch",
+      action: ACTION.Sketch,
       name: activeSketchName,
       sketch: activeSketch,
     }
     compSocket.send(JSON.stringify(resp));
   }
-  else if (msg.action == "update-active-sketch-gist") {
+  else if (msg.action == ACTION.UpdateActiveSketchGist) {
     activeSketch.gist = msg.gist;
     const out = {
-      action: "sketch-gist",
+      action: ACTION.SketchGist,
       gist: activeSketch.gist,
     };
     const outStr = JSON.stringify(out);
     for (const ps of projSockets) ps.send(outStr);
     void saveActiveSketch();
   }
+  else if (msg.action == ACTION.Command) {
+    const outStr = JSON.stringify(msg);
+    for (const ps of projSockets) ps.send(outStr);
+  }
 }
 
 function handleProjectorMessage(fromSocket, msg) {
-  if (msg.action == "get-active-sketch") {
+  if (msg.action == ACTION.GetActiveSketch) {
     const resp = {
-      action: "sketch",
+      action: ACTION.Sketch,
       name: activeSketchName,
       sketch: activeSketch,
     }
     fromSocket.send(JSON.stringify(resp));
+  }
+  else if (msg.action == ACTION.BadCode) {
+    if (compSocket != null) compSocket.send(JSON.stringify(msg));
   }
 }
 
@@ -153,52 +158,4 @@ async function saveActiveSketch() {
   const fn = path.join(dataDir, `${activeSketchName}.json`);
   const json = JSON.stringify(activeSketch, null, 2);
   fs.writeFile(fn, json, 'utf8');
-}
-
-async function handlePostShader(req, res) {
-
-  let nameObj = {};
-  if (shaderStore.hasOwnProperty(req.params.name))
-    nameObj = shaderStore[req.params.name];
-  else shaderStore[req.params.name] = nameObj;
-
-  let subObj = {
-    seq: -1,
-    val: null,
-  };
-  if (nameObj.hasOwnProperty(req.params.sub))
-    subObj = nameObj[req.params.sub];
-  else nameObj[req.params.sub] = subObj;
-
-  if (subObj.val != req.body) {
-    subObj.val = req.body;
-    ++subObj.seq;
-  }
-  res.sendStatus(200);
-  // TODO: save history
-}
-
-
-async function handleGetShader(req, res) {
-  let seq = -1;
-  if (req.query.hasOwnProperty("seq")) {
-    seq = parseInt(req.query.seq);
-    if (isNaN(seq)) seq = -1;
-  }
-  if (!shaderStore.hasOwnProperty(req.params.name)) {
-    res.sendStatus(404);
-    return;
-  }
-  const nameObj = shaderStore[req.params.name];
-  if (!nameObj.hasOwnProperty(req.params.sub)) {
-    res.sendStatus(404);
-    return;
-  }
-  const subObj = nameObj[req.params.sub];
-  if (seq == subObj.seq) {
-    res.sendStatus(304);
-    return;
-  }
-  res.setHeader("content-type", "text/plain");
-  await res.json(subObj);
 }

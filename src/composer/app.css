@@ -1,7 +1,7 @@
 /* Defines */
 :root {
-  --previewWidth: 720px;
-  --previewHeight: 576px;
+  --previewWidth: 640px;
+  --previewHeight: 480px;
   --fntMono: "IBM Plex Mono", monospace;
   --fntSans: "IBM Plex Sans", sans-serif;
   --fntSizeHeading: 24px;
@@ -16,8 +16,10 @@
   --clrTextError: #b63939;
   --clrBodyBg: #181818;
   --clrPanelBg: #282828;
+  --clrPanelBgLighter: #444;
   --clrEditorBg: #282828;
   --clrControl: #9f7e52;
+  --clrControlBg: #54432c;
   --clrControlHover: #d08e4c;
 }
 
@@ -55,7 +57,20 @@ body {
 #app-top {
   height: 46px; min-height: 46px; background-color: var(--clrPanelBg); border: 1px solid var(--clrTextFaintest);
   position: relative; color: var(--clrControl); user-select: none;
+  & h1 { margin: 7px 0 0 60px; font-size: 20px; font-weight: normal; display: inline-block; }
   & svg * { stroke: var(--clrControl); }
+  & button {
+    float: right; margin: 8px 10px 0 0; background-color: var(--clrPanelBg);
+    border: 1px solid var(--clrControl); color: var(--clrTextFaint); padding: 4px 10px;
+    font-size: var(--fntSizeBase);
+    &.on { background-color: var(--clrControlBg); }
+  }
+  & select {
+    float: right; margin: 8px 10px 0 0; background-color: var(--clrPanelBg);
+    border: 1px solid var(--clrControl); color: var(--clrTextFaint); padding: 4px 10px;
+    font-size: var(--fntSizeBase);
+  }
+  /*& option { color: red; background-color: green; }*/
 }
 #app-lr { width: 100%; flex-grow: 1; display: flex; align-items: flex-start; gap: 10px; }
 #app-left { flex-grow: 1; height: 100%; }
@@ -65,25 +80,26 @@ body {
 
 #emblem {
   width: 40px; height: 40px; position: absolute; left: 5px; top: 2px;
+  &.animating, &.animating:hover { filter: drop-shadow(0px 0px 6px white); }
+  &:hover { filter: drop-shadow(0px 0px 6px var(--clrControlHover)); }
 }
-h1 { margin: 7px 0 0 60px; font-size: 20px; font-weight: normal; }
 
 #editorHost {
-  position: relative; background-color: transparent;
+  position: relative; background-color: var(--clrEditorBg);
   width: 100%; height: 100%;
   border: 1px solid var(--clrTextFaintest);
 }
 #editorBg {
   position: absolute; width: 100%; height: 100%;
   background-color: black; opacity: 0.0;
-  transition: background-color ease-out 1.5s;
+  transition: background-color ease-out 1.5s, opacity  ease-out 1.5s;
 }
-#editorBg.error { background-color: red; transition: none; }
-#editorBg.apply { background-color: #aaa; transition: none; }
+#editorBg.error { background-color: red; transition: none; opacity: 0.2; }
+#editorBg.apply { background-color: #aaa; transition: none; opacity: 0.2; }
 #editorHost .CodeMirror.cm-s-monokai {
   height: 100%; font-family: var(--fntMono); font-size: var(--fntSizeBase);
   color: var(--clrText);
-  background-color: var(--clrEditorBg);
+  background-color: transparent;
   & .CodeMirror-gutters { background-color: transparent; }
   & .cm-scroller { font-family: var(--fntMono); }
   & .cm-gutters { background-color: transparent; border: none; }
