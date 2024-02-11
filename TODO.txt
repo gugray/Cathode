@@ -2,8 +2,10 @@ OK Two-pass render; infuse previous texture for feedback effects
 -- Audio (FFT) input
 -- Movie sequences
 
+
 OK Success confirm flash
 OK Editor scroll when much text
 OK Report size
+-- Multiple sketches
 -- Set 0 time on animation start
 -- Editor colors; matching brackets w/BG
