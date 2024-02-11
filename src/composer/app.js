@@ -1,9 +1,8 @@
 import {Editor} from "./editor.js";
 import sDefaultGist from "../shader/default-gist.glsl";
 import { truncate } from "../common/utils.js";
-import { ACTION, COMMAND } from "../common/actions.js";
+import * as SD from "../common/server-defs.js";
 
-const socketUrl = "ws://localhost:8090/comp";
 const logComms = true;
 void init();
 
@@ -27,11 +26,7 @@ function initEditor() {
 
   document.body.addEventListener("keydown", e => {
     let handled = false;
-    // if (e.metaKey && e.key == "e") {
-    //   if (editor.cm.hasFocus()) editor.cm.display.input.blur();
-    //   else editor.cm.display.input.focus();
-    //   handled = true;
-    // }
+    //if (e.metaKey && e.key == "e")
     if (handled) {
       e.preventDefault();
       return false;
@@ -64,6 +59,15 @@ function safeGetStoredHiDef() {
   if (storedStr != null && storedStr != "true") isHiDef = false;
   if (!isHiDef) elmHiDef.classList.remove("on");
   else elmHiDef.classList.add("on");
+  // This happens when composer loads. Tell projectors, after they've had time to also load.
+  setTimeout(() => {
+    const msg = {
+      action: SD.ACTION.Command,
+      command: SD.COMMAND.SetHiDef,
+      data: isHiDef,
+    }
+    socket.send(JSON.stringify(msg));
+  }, 1000);
 }
 
 function toggleHiDef() {
@@ -72,8 +76,8 @@ function toggleHiDef() {
   else elmHiDef.classList.remove("on");
   localStorage.setItem("hidef", newHiDef);
   const msg = {
-    action: ACTION.Command,
-    command: COMMAND.SetHiDef,
+    action: SD.ACTION.Command,
+    command: SD.COMMAND.SetHiDef,
     data: newHiDef,
   }
   socket.send(JSON.stringify(msg));
@@ -103,15 +107,15 @@ function toggleAnimate() {
   if (newAnimating) elmEmblem.classList.add("animating");
   else elmEmblem.classList.remove("animating");
   const msg = {
-    action: ACTION.Command,
-    command: COMMAND.SetAnimate,
+    action: SD.ACTION.Command,
+    command: SD.COMMAND.SetAnimate,
     data: newAnimating,
   };
   socket.send(JSON.stringify(msg));
 }
 
 function initSocket() {
-  socket = new WebSocket(socketUrl);
+  socket = new WebSocket(SD.kSocketUrl + SD.kSocketPathComp);
   socket.addEventListener("open", () => {
     if (logComms) console.log("[COMP] Socket open");
     requestActiveSketch();
@@ -130,13 +134,19 @@ function initSocket() {
 
 function requestActiveSketch() {
   const msg = {
-    action: ACTION.GetActiveSketch,
+    action: SD.ACTION.GetActiveSketch,
   };
   socket.send(JSON.stringify(msg));
 }
 
+function flashEditor(className) {
+  if (elmBg.classList.contains(className)) return;
+  elmBg.classList.add(className);
+  setTimeout(() => elmBg.classList.remove(className), 200);
+}
+
 function handleSocketMessage(msg) {
-  if (msg.action == ACTION.Sketch) {
+  if (msg.action == SD.ACTION.Sketch) {
     if (msg.sketch.hasOwnProperty("gist"))
       editor.cm.doc.setValue(msg.sketch.gist);
     else {
@@ -144,16 +154,19 @@ function handleSocketMessage(msg) {
       void submitShader();
     }
   }
-  else if (msg.action == ACTION.BadCode) {
-    elmBg.classList.add("error");
-    setTimeout(() => elmBg.classList.remove("error"), 200);
+  else if (msg.action == SD.ACTION.Report) {
+    if (msg.report == SD.REPORT.BadCode) flashEditor("error");
+    else if (msg.report == SD.REPORT.ShaderUpdated) flashEditor("apply");
+    else if (msg.report == SD.REPORT.CanvasSize) {
+      console.log(`Canvas size: ${msg.w} x ${msg.h}`);
+    }
   }
 }
 
 async function submitShader() {
   if (socket == null) return;
   const msg = {
-    action: ACTION.UpdateActiveSketchGist,
+    action: SD.ACTION.UpdateActiveSketchGist,
     gist: editor.cm.doc.getValue(),
   };
   socket.send(JSON.stringify(msg));

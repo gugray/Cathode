@@ -3,5 +3,6 @@
 -- Movie sequences
 
 -- Success confirm flash
+-- Editor scroll when much text
+-- Report size
 -- Editor colors; matching brackets w/BG
-

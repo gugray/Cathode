@@ -5,7 +5,8 @@ import cors from "cors";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { truncate } from "./common/utils.js";
-import { ACTION } from "./common/actions.js";
+import * as SD from "./common/server-defs.js";
+import {kSocketPathProj} from "./common/server-defs.js";
 
 const dataDir = "./data";
 let activeSketch = {};
@@ -28,12 +29,12 @@ export async function run(port) {
 
   // Upgrade connections to web socker
   server.on("upgrade", (request, socket, head) => {
-    if (request.url === '/comp') {
+    if (request.url === SD.kSocketPathComp) {
       wsComp.handleUpgrade(request, socket, head, (ws) => {
         wsComp.emit("connection", ws, request);
       });
     }
-    else if (request.url === '/proj') {
+    else if (request.url === SD.kSocketPathProj) {
       wsProj.handleUpgrade(request, socket, head, (ws) => {
         wsProj.emit("connection", ws, request);
       });
@@ -98,40 +99,40 @@ function listen(server, port) {
 }
 
 function handleComposerMessage(msg) {
-  if (msg.action == ACTION.GetActiveSketch) {
+  if (msg.action == SD.ACTION.GetActiveSketch) {
     const resp = {
-      action: ACTION.Sketch,
+      action: SD.ACTION.Sketch,
       name: activeSketchName,
       sketch: activeSketch,
     }
     compSocket.send(JSON.stringify(resp));
   }
-  else if (msg.action == ACTION.UpdateActiveSketchGist) {
+  else if (msg.action == SD.ACTION.UpdateActiveSketchGist) {
     activeSketch.gist = msg.gist;
     const out = {
-      action: ACTION.SketchGist,
+      action: SD.ACTION.SketchGist,
       gist: activeSketch.gist,
     };
     const outStr = JSON.stringify(out);
     for (const ps of projSockets) ps.send(outStr);
     void saveActiveSketch();
   }
-  else if (msg.action == ACTION.Command) {
+  else if (msg.action == SD.ACTION.Command) {
     const outStr = JSON.stringify(msg);
     for (const ps of projSockets) ps.send(outStr);
   }
 }
 
 function handleProjectorMessage(fromSocket, msg) {
-  if (msg.action == ACTION.GetActiveSketch) {
+  if (msg.action == SD.ACTION.GetActiveSketch) {
     const resp = {
-      action: ACTION.Sketch,
+      action: SD.ACTION.Sketch,
       name: activeSketchName,
       sketch: activeSketch,
     }
     fromSocket.send(JSON.stringify(resp));
   }
-  else if (msg.action == ACTION.BadCode) {
+  else if (msg.action == SD.ACTION.Report) {
     if (compSocket != null) compSocket.send(JSON.stringify(msg));
   }
 }
