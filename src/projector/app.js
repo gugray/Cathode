@@ -1,5 +1,6 @@
 import sSweepVert from "../shader/sweep-vert.glsl";
 import sMainFrag from "../shader/main-frag.glsl";
+import sOutputDrawFrag from "../shader/output-draw-frag.glsl";
 import sDefaultGist from "../shader/default-gist.glsl";
 import * as twgl from "twgl.js";
 import { truncate } from "../common/utils.js";
@@ -11,10 +12,11 @@ init();
 
 let hiDef = false;
 let webGLCanvas, gl, w, h;
+let txOutput0, txOutput1;
 let socket;
 let sGist;
 let sweepArrays, sweepBufferInfo;
-let progiMain;
+let progiMain, progiOutputDraw;
 let animating = false;
 
 function init() {
@@ -30,9 +32,9 @@ function init() {
   };
   sweepBufferInfo = twgl.createBufferInfoFromArrays(gl, sweepArrays);
 
-  resizeCanvas();
+  resizeWorld();
   window.addEventListener("resize", () => {
-    resizeCanvas();
+    resizeWorld();
   });
 
   initSocket();
@@ -84,7 +86,7 @@ function handleSocketMessage(msg) {
       const newHiDef = msg.data;
       if (newHiDef == hiDef) return;
       hiDef = newHiDef;
-      resizeCanvas();
+      resizeWorld();
     }
   }
 }
@@ -95,7 +97,9 @@ function initGui() {
   });
 }
 
-function resizeCanvas() {
+function resizeWorld() {
+
+  // Resize WebGL canvas
   let elmWidth = window.innerWidth;
   let elmHeight = window.innerHeight;
   webGLCanvas.style.width = elmWidth + "px";
@@ -103,8 +107,38 @@ function resizeCanvas() {
   const mul = hiDef ? devicePixelRatio : 1;
   w = webGLCanvas.width = elmWidth * mul;
   h = webGLCanvas.height = elmHeight * mul;
+
+  // First pingpong output texture
+  const dtRender0 = new Uint8Array(w * h * 4);
+  dtRender0.fill(0);
+  if (txOutput0) gl.deleteTexture(txOutput0);
+  txOutput0 = twgl.createTexture(gl, {
+    internalFormat: gl.RGBA,
+    format: gl.RGBA,
+    type: gl.UNSIGNED_BYTE,
+    width: w,
+    height: h,
+    src: dtRender0,
+  });
+
+  // Other pingpong output texture
+  const dtRender1 = new Uint8Array(w * h * 4);
+  dtRender1.fill(0);
+  if (txOutput1) gl.deleteTexture(txOutput1);
+  txOutput1 = twgl.createTexture(gl, {
+    internalFormat: gl.RGBA,
+    format: gl.RGBA,
+    type: gl.UNSIGNED_BYTE,
+    width: w,
+    height: h,
+    src: dtRender1,
+  });
+
+  // Make sure we re-render
   if (!animating)
     requestAnimationFrame(frame);
+
+  // Report our size to composer
   safeReportSize();
 }
 
@@ -133,33 +167,64 @@ function compilePrograms() {
   const recreate = (v, f) => twgl.createProgramInfo(gl, [v, f]);
 
   const ph = "// GIST.GLSL"; // Placeholder text
-  const frag = sMainFrag.replace(ph, sGist);
-  const npMain = recreate(sSweepVert, frag);
+  const mainFrag = sMainFrag.replace(ph, sGist);
+  const npMain = recreate(sSweepVert, mainFrag);
+  const npOutputDraw = recreate(sSweepVert, sOutputDrawFrag);
 
+  const compileOK = (npMain && npOutputDraw);
   const msg = {
     action: SD.ACTION.Report,
-    report: npMain ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
+    report: compileOK ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
   };
   socket.send(JSON.stringify(msg));
 
-  if (!npMain) return;
+  if (!compileOK) return;
 
   del(progiMain);
   progiMain = npMain;
+  progiOutputDraw = npOutputDraw;
 }
 
 
 function frame(time) {
 
+  // Render to txOutput1
   const unisMain = {
+    txPrev: txOutput0,
     resolution: [w, h],
     time: time,
   }
-  twgl.bindFramebufferInfo(gl, null);
+  // Bind frame buffer: texture to draw on
+  let atmsPR = [{attachment: txOutput1}];
+  let fbufPR = twgl.createFramebufferInfo(gl, atmsPR, w, h);
+  twgl.bindFramebufferInfo(gl, fbufPR);
+  // Set up size, program, uniforms
   gl.viewport(0, 0, w, h);
   gl.useProgram(progiMain.program);
   twgl.setBuffersAndAttributes(gl, progiMain, sweepBufferInfo);
   twgl.setUniforms(progiMain, unisMain);
+  // Clear to black
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+  // Render fragment sweep
   twgl.drawBufferInfo(gl, sweepBufferInfo);
+
+  // Render txOutput1 to canvas
+  const unisOutputDraw = {
+    txOutput: txOutput1,
+  }
+  twgl.bindFramebufferInfo(gl, null);
+  // Set up size, program, uniforms
+  gl.viewport(0, 0, w, h);
+  gl.useProgram(progiOutputDraw.program);
+  twgl.setBuffersAndAttributes(gl, progiOutputDraw, sweepBufferInfo);
+  twgl.setUniforms(progiOutputDraw, unisOutputDraw);
+  // Render fragment swep
+  twgl.drawBufferInfo(gl, sweepBufferInfo);
+
+  // Swap output buffers: current output becomes "prev" texture for next round
+  [txOutput0, txOutput1] = [txOutput1, txOutput0];
+
+  // Schedule next frame
   if (animating) requestAnimationFrame(frame);
 }
