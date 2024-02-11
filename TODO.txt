@@ -1,6 +1,11 @@
+To extract frames from video:
+ffmpeg -i clip.mp4 -vf vflip -r 30 frame%03d.png
+
 OK Two-pass render; infuse previous texture for feedback effects
+OK One clip via texture
+-- Multiple clips
+-- Clip sequencing
 -- Audio (FFT) input
--- Movie sequences
 
 
 OK Success confirm flash

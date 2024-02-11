@@ -3,6 +3,7 @@ import * as http from "http";
 import { WebSocketServer } from "ws";
 import cors from "cors";
 import { promises as fs } from "fs";
+import { createReadStream } from 'fs';
 import * as path from "path";
 import { truncate } from "./common/utils.js";
 import * as SD from "./common/server-defs.js";
@@ -26,6 +27,9 @@ export async function run(port) {
   const server = http.createServer(app);
   const wsComp = new WebSocketServer({ noServer: true });
   const wsProj = new WebSocketServer({ noServer: true });
+
+  app.get("/clips/:name", handleGetClip);
+  app.get("/clips/:name/:frame", handleGetClipFrame);
 
   // Upgrade connections to web socker
   server.on("upgrade", (request, socket, head) => {
@@ -158,5 +162,39 @@ async function loadActiveSketch() {
 async function saveActiveSketch() {
   const fn = path.join(dataDir, `${activeSketchName}.json`);
   const json = JSON.stringify(activeSketch, null, 2);
-  fs.writeFile(fn, json, 'utf8');
+  await fs.writeFile(fn, json, 'utf8');
+}
+
+async function handleGetClip(req, res) {
+  let files;
+  try {
+    files = await fs.readdir(path.join(dataDir, `clip-${req.params.name}`));
+  }
+  catch (err) {
+    if (err.hasOwnProperty("code") && err.code == "ENOENT")
+      res.sendStatus(404);
+    else res.sendStatus(500);
+    return;
+  }
+  let nFrames = 0;
+  for (const fn of files) {
+    if (fn.startsWith("frame")) ++nFrames;
+  }
+  const obj = {
+    frames: nFrames,
+  };
+  await res.json(obj);
+}
+
+async function handleGetClipFrame(req, res) {
+  const ixStr = parseInt(req.params.frame).toString().padStart(3, '0');
+  const fn = path.join(dataDir, `clip-${req.params.name}/frame${ixStr}.png`);
+  const s = createReadStream(fn);
+  s.on("open", () => {
+    res.set("content-type", "image/png");
+    s.pipe(res);
+  });
+  s.on("error", () => {
+    res.sendStatus(404);
+  });
 }

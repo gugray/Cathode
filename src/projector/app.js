@@ -12,12 +12,15 @@ init();
 
 let hiDef = false;
 let webGLCanvas, gl, w, h;
-let txOutput0, txOutput1;
-let socket;
-let sGist;
 let sweepArrays, sweepBufferInfo;
 let progiMain, progiOutputDraw;
+let txOutput0, txOutput1;
+let clip0;
+let socket;
+let sGist;
 let animating = false;
+let animStartTime = -1;
+let lastFrameTime = -1;
 
 function init() {
 
@@ -41,6 +44,14 @@ function init() {
   initGui();
 
   setTimeout(() => safeReportSize(), 500);
+
+  // TODO: Remove once clips are part of sketches
+  clip0 = {
+    frames: [],
+    dims: [0, 0],
+    tx: null,
+  };
+  void getClipFrames("wind", clip0);
 }
 
 function initSocket() {
@@ -71,6 +82,7 @@ function handleSocketMessage(msg) {
     if (!msg.sketch.hasOwnProperty("gist"))
       return;
     updateGist(msg.sketch.gist);
+    // TODO: Fetch clip frame once they are defined in sketch
   }
   else if (msg.action == SD.ACTION.SketchGist) {
     updateGist(msg.gist);
@@ -80,6 +92,7 @@ function handleSocketMessage(msg) {
       const newAnimating = msg.data;
       if (newAnimating == animating) return;
       animating = newAnimating;
+      animStartTime = lastFrameTime = -1;
       if (animating) requestAnimationFrame(frame);
     }
     else if (msg.command == SD.COMMAND.SetHiDef) {
@@ -161,6 +174,44 @@ function updateGist(newGist) {
     requestAnimationFrame(frame);
 }
 
+async function getClipFrames(clipName, clip) {
+  clip.frames.length = 0;
+  clip.dims = [0, 0];
+  const url = `${SD.kServerUrl}/clips/${clipName}`;
+  const resp = await fetch(url, { method: "GET" });
+  if (resp.status != 200) {
+    console.error(`Failed to get clip info for ${clipName}; status: ${resp.status}`);
+    return;
+  }
+  const info = await resp.json();
+  for (let i = 0; i < info.frames; ++i) {
+    const url = `${SD.kServerUrl}/clips/${clipName}/${i+1}`;
+    const resp = await fetch(url, { method: "GET" });
+    if (resp.status != 200) break;
+    const blob = await resp.blob();
+    const imageBitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    clip.dims[0] = canvas.width = imageBitmap.width;
+    clip.dims[1] = canvas.height = imageBitmap.height;
+    ctx.drawImage(imageBitmap, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const { data } = imageData;
+    const rgbaArr = new Uint8Array(data);
+    clip.frames.push(rgbaArr);
+  }
+  if (clip.tx) gl.deleteTexture(clip.tx);
+  clip.tx = twgl.createTexture(gl, {
+    internalFormat: gl.RGBA,
+    format: gl.RGBA,
+    type: gl.UNSIGNED_BYTE,
+    width: clip.dims[0],
+    height: clip.dims[1],
+    src: clip.frames[0],
+  });
+  console.log(`Clip "${clipName}": ${clip.dims[0]} x ${clip.dims[1]}; ${clip.frames.length} frames`);
+}
+
 function compilePrograms() {
 
   const del = pi => { if (pi && pi.program) gl.deleteProgram(pi.program); }
@@ -188,9 +239,33 @@ function compilePrograms() {
 
 function frame(time) {
 
+  if (animStartTime == -1) {
+    animStartTime = time;
+    lastFrameTime = animStartTime - (1000 / 60);
+  }
+  time -= animStartTime;
+  const frameIx = Math.round(time * 60 / 1000);
+  if (clip0.tx && (frameIx % 2) == 0) {
+    const clipIx = (frameIx/2) % clip0.frames.length;
+    const data = clip0.frames[clipIx];
+    gl.bindTexture(gl.TEXTURE_2D, clip0.tx);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      clip0.dims[0],
+      clip0.dims[1],
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      clip0.frames[clipIx],
+    );
+  }
+
   // Render to txOutput1
   const unisMain = {
     txPrev: txOutput0,
+    txClip0: clip0.tx,
     resolution: [w, h],
     time: time,
   }
