@@ -45,7 +45,9 @@ class Editor {
       autofocus: true,
       extraKeys: {
         "Cmd-Enter": () => this.onSubmit && this.onSubmit(),
+        "Ctrl-Enter": () => this.onSubmit && this.onSubmit(),
         "Shift-Cmd-Enter": () => this.onToggleAnimate && this.onToggleAnimate(),
+        "Shift-Ctrl-Enter": () => this.onToggleAnimate && this.onToggleAnimate(),
       },
     });
 

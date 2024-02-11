@@ -72,7 +72,7 @@ body {
   }
   /*& option { color: red; background-color: green; }*/
 }
-#app-lr { width: 100%; flex-grow: 1; display: flex; align-items: flex-start; gap: 10px; }
+#app-lr { width: 100%; flex: 1 1 0; overflow-y: hidden; display: flex; align-items: flex-start; gap: 10px; }
 #app-left { flex-grow: 1; height: 100%; }
 #app-right { border: 1px solid var(--clrTextFaintest); }
 #previewFrame { border: 0; padding: 0; margin: 0; }

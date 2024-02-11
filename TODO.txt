@@ -2,7 +2,7 @@
 -- Audio (FFT) input
 -- Movie sequences
 
--- Success confirm flash
--- Editor scroll when much text
--- Report size
+OK Success confirm flash
+OK Editor scroll when much text
+OK Report size
 -- Editor colors; matching brackets w/BG
