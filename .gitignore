@@ -1,7 +1,6 @@
 public
-data
 .DS_Store
 node_modules
 .idea
 yarn-error.log
-
+data/clip*
