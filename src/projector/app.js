@@ -120,6 +120,8 @@ function resizeWorld() {
   const mul = hiDef ? devicePixelRatio : 1;
   w = webGLCanvas.width = elmWidth * mul;
   h = webGLCanvas.height = elmHeight * mul;
+  // w = webGLCanvas.width = 640;
+  // h = webGLCanvas.height = 480;
 
   // First pingpong output texture
   const dtRender0 = new Uint8Array(w * h * 4);
@@ -236,13 +238,13 @@ function compilePrograms() {
   progiOutputDraw = npOutputDraw;
 }
 
-
 function frame(time) {
 
   if (animStartTime == -1) {
     animStartTime = time;
     lastFrameTime = animStartTime - (1000 / 60);
   }
+
   time -= animStartTime;
   const frameIx = Math.round(time * 60 / 1000);
   if (clip0.tx && (frameIx % 2) == 0) {
@@ -260,6 +262,7 @@ function frame(time) {
       gl.UNSIGNED_BYTE,
       clip0.frames[clipIx],
     );
+    gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
   // Render to txOutput1

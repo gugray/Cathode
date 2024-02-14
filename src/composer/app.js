@@ -17,6 +17,7 @@ async function init() {
   initSocket();
 }
 
+
 function initEditor() {
   const elmHost = document.getElementById("editorHost");
   elmHost.style.display = "block";
