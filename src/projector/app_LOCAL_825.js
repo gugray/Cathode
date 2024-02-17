@@ -11,7 +11,6 @@ const logComms = true;
 init();
 
 let hiDef = false;
-let knobs = [0, 0, 0, 0, 0, 0, 0, 0];
 let webGLCanvas, gl, w, h;
 let sweepArrays, sweepBufferInfo;
 let progiMain, progiOutputDraw;
@@ -102,10 +101,6 @@ function handleSocketMessage(msg) {
       hiDef = newHiDef;
       resizeWorld();
     }
-    else if (msg.command == SD.COMMAND.SetKnob) {
-      knobs[msg.data.ix] = msg.data.val;
-      console.log(knobs); // DBG
-    }
   }
 }
 
@@ -123,8 +118,10 @@ function resizeWorld() {
   webGLCanvas.style.width = elmWidth + "px";
   webGLCanvas.style.height = elmHeight + "px";
   const mul = hiDef ? devicePixelRatio : 1;
-  w = webGLCanvas.width = Math.round(elmWidth * mul);
-  h = webGLCanvas.height = Math.round(elmHeight * mul);
+  w = webGLCanvas.width = elmWidth * mul;
+  h = webGLCanvas.height = elmHeight * mul;
+  // w = webGLCanvas.width = 640;
+  // h = webGLCanvas.height = 480;
 
   // First pingpong output texture
   const dtRender0 = new Uint8Array(w * h * 4);
@@ -274,14 +271,6 @@ function frame(time) {
     txClip0: clip0.tx,
     resolution: [w, h],
     time: time,
-    knob0: knobs[0],
-    knob1: knobs[1],
-    knob2: knobs[2],
-    knob3: knobs[3],
-    knob4: knobs[4],
-    knob5: knobs[5],
-    knob6: knobs[6],
-    knob7: knobs[7],
   }
   // Bind frame buffer: texture to draw on
   let atmsPR = [{attachment: txOutput1}];

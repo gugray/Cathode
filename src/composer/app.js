@@ -1,4 +1,5 @@
 import {Editor} from "./editor.js";
+import {LPD8} from "./lpd8.js";
 import sDefaultGist from "../shader/default-gist.glsl";
 import { truncate } from "../common/utils.js";
 import * as SD from "../common/server-defs.js";
@@ -8,6 +9,7 @@ void init();
 
 let socket;
 let editor;
+let lpd8;
 
 let elmEmblem, elmBg, elmResolution, elmHiDef;
 
@@ -15,6 +17,27 @@ async function init() {
   initGui();
   initEditor();
   initSocket();
+  initMidi();
+}
+
+function initMidi() {
+  lpd8 = new LPD8();
+  lpd8.onknobchange = (knobIx, val) => sendKnobVal(knobIx, val);
+}
+
+function sendKnobVal(knobIx, val) {
+  if (socket == null) return;
+  const msg = {
+    action: SD.ACTION.Command,
+    command: SD.COMMAND.SetKnob,
+    data: { ix: knobIx, val: val },
+  };
+  socket.send(JSON.stringify(msg));
+}
+
+function sendAllKnobVals() {
+  for (let i = 0; i < 8; ++i)
+    sendKnobVal(i, lpd8.getKnobVal((i)));
 }
 
 
@@ -120,6 +143,7 @@ function initSocket() {
   socket.addEventListener("open", () => {
     if (logComms) console.log("[COMP] Socket open");
     requestActiveSketch();
+    setTimeout(sendAllKnobVals, 100);
   });
   socket.addEventListener("message", (event) => {
     const msgStr = event.data;

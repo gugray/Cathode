@@ -1,16 +1,16 @@
 To extract frames from video:
 ffmpeg -i clip.mp4 -vf vflip -r 30 frame%03d.png
 
-OK Two-pass render; infuse previous texture for feedback effects
-OK One clip via texture
--- Multiple clips
--- Clip sequencing
--- Audio (FFT) input
+-- access controller
+-- multiple docs in editor
+-- calc shader -> delta time rate updates
+-- multiple sketches; shaders in text files
+-- editor colors; matching brackets w/BG
 
+-- mega texture with full vid
 
-OK Success confirm flash
-OK Editor scroll when much text
-OK Report size
--- Multiple sketches
--- Set 0 time on animation start
--- Editor colors; matching brackets w/BG
+Sketch ideas:
+-- turn luma changerate into hue
+-- wobbly time
+
+home40 https://archive.org/details/098511

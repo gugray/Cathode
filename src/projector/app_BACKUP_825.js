@@ -123,8 +123,15 @@ function resizeWorld() {
   webGLCanvas.style.width = elmWidth + "px";
   webGLCanvas.style.height = elmHeight + "px";
   const mul = hiDef ? devicePixelRatio : 1;
+<<<<<<< HEAD
+  w = webGLCanvas.width = elmWidth * mul;
+  h = webGLCanvas.height = elmHeight * mul;
+  // w = webGLCanvas.width = 640;
+  // h = webGLCanvas.height = 480;
+=======
   w = webGLCanvas.width = Math.round(elmWidth * mul);
   h = webGLCanvas.height = Math.round(elmHeight * mul);
+>>>>>>> 85b1df5 (midi pad knobs mapped)
 
   // First pingpong output texture
   const dtRender0 = new Uint8Array(w * h * 4);

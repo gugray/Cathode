@@ -241,13 +241,13 @@ function compilePrograms() {
   progiOutputDraw = npOutputDraw;
 }
 
+
 function frame(time) {
 
   if (animStartTime == -1) {
     animStartTime = time;
     lastFrameTime = animStartTime - (1000 / 60);
   }
-
   time -= animStartTime;
   const frameIx = Math.round(time * 60 / 1000);
   if (clip0.tx && (frameIx % 2) == 0) {
@@ -265,7 +265,6 @@ function frame(time) {
       gl.UNSIGNED_BYTE,
       clip0.frames[clipIx],
     );
-    gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
   // Render to txOutput1

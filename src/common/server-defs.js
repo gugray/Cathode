@@ -19,6 +19,7 @@ export const ACTION = {
 export const COMMAND = {
   SetAnimate: "set-animate",
   SetHiDef: "set-hidef",
+  SetKnob: "set-knob",
 }
 
 export const REPORT = {
