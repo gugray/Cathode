@@ -11,13 +11,10 @@ import * as Sketch from "./sketch.js";
 import {kSocketPathProj} from "./common/server-defs.js";
 
 const dataDir = "./data";
-let activeSketch;
-let activeSketchName = "henlo";
+let activeSketch = null;
+let activeSketchName = null;
 const projSockets = [];
 let compSocket = null;
-
-// Start by loading default sketch
-activeSketch = await Sketch.load(dataDir, activeSketchName);
 
 // This is the entry point: starts servers
 export async function run(port) {
@@ -103,8 +100,33 @@ function listen(server, port) {
   });
 }
 
-function handleComposerMessage(msg) {
-  if (msg.action == SD.ACTION.GetActiveSketch) {
+async function handleComposerMessage(msg) {
+  if (msg.action == SD.ACTION.ListSketches) {
+    const resp = {
+      action: SD.ACTION.ListSketches,
+      names: await Sketch.listSketches(dataDir),
+    }
+    compSocket.send(JSON.stringify(resp));
+  }
+  else if (msg.action == SD.ACTION.ActivateSketch) {
+    const sketch = await Sketch.load(dataDir, msg.name);
+    if (sketch.main == "") {
+      activeSketch = activeSketchName = null;
+      return;
+    }
+    activeSketch = sketch;
+    activeSketchName = sketch.name;
+    const resp = {
+      action: SD.ACTION.Sketch,
+      name: activeSketchName,
+      sketch: activeSketch,
+    }
+    const outStr = JSON.stringify(resp);
+    compSocket.send(outStr);
+    for (const ps of projSockets) ps.send(outStr);
+  }
+  else if (msg.action == SD.ACTION.GetActiveSketch) {
+    if (activeSketch == null) return;
     const resp = {
       action: SD.ACTION.Sketch,
       name: activeSketchName,
@@ -113,6 +135,7 @@ function handleComposerMessage(msg) {
     compSocket.send(JSON.stringify(resp));
   }
   else if (msg.action == SD.ACTION.UpdateActiveSketchShader) {
+    if (activeSketch == null) return;
     activeSketch[msg.name] = msg.shaderCode;
     const out = {
       action: SD.ACTION.SketchShader,
@@ -131,6 +154,7 @@ function handleComposerMessage(msg) {
 
 function handleProjectorMessage(fromSocket, msg) {
   if (msg.action == SD.ACTION.GetActiveSketch) {
+    if (activeSketch == null) return;
     const resp = {
       action: SD.ACTION.Sketch,
       name: activeSketchName,

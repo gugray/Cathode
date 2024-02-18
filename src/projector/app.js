@@ -1,6 +1,7 @@
 import sSweepVert from "../shader/sweep-vert.glsl";
 import sCalcFrag from "../shader/calc-frag.glsl";
 import sMainFrag from "../shader/main-frag.glsl";
+import sDefaultCalc from "../shader/default-calc.glsl";
 import sOutputDrawFrag from "../shader/output-draw-frag.glsl";
 import * as twgl from "twgl.js";
 import { truncate } from "../common/utils.js";
@@ -209,7 +210,7 @@ function updateShaders(infos) {
   const isFirstUpdate = sMain == null;
   for (const i of infos) {
     if (i.name == "main") sMain = i.shaderCode;
-    else if (i.name == "calc") sCalc = i.shaderCode;
+    else if (i.name == "calc") sCalc = i.shaderCode ?? sDefaultCalc;
     else console.log("[PROJ] update for unknown shader: " + i.name);
   }
   compilePrograms();

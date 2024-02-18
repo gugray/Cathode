@@ -25,6 +25,23 @@ export function makeEmpty(name) {
   };
 }
 
+export async function listSketches(dir) {
+  const res = [];
+  let files;
+  try {
+    files = await fs.readdir(dir);
+  }
+  catch (err) {
+    console.error(`Failed to list files in director: ${dir}`);
+    return res;
+  }
+  for (const fn of files) {
+    if (!fn.endsWith(".json")) continue;
+    res.push(fn.replaceAll(".json", ""));
+  }
+  return res;
+}
+
 /**
  * Loads a sketch from disk. Returns empty sketch if doesn't exist / failed to parse.
  * @returns {Sketch}

@@ -3,6 +3,6 @@ void main() {
     vec2 p = uv;
     p.x *= resolution.x/resolution.y;
 
-    vec3 clr = vec3(0.3, 0.3, 0.0);
+    vec3 clr = vec3(0.4, 0.1, 0.0);
     outColor = vec4(clr.rgb, 1.0);
 }

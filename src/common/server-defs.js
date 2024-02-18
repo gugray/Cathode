@@ -4,6 +4,8 @@ export const kSocketPathProj = "/proj";
 export const kSocketPathComp = "/comp";
 
 export const ACTION = {
+  ListSketches: "list-sketches",
+  ActivateSketch: "activate-sketch",
   GetActiveSketch: "get-active-sketch",
   Sketch: "sketch",
   SketchShader: "sketch-shader",

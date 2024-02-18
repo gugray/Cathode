@@ -70,7 +70,7 @@ body {
     border: 1px solid var(--clrControl); color: var(--clrTextFaint); padding: 4px 10px;
     font-size: var(--fntSizeBase);
   }
-  /*& option { color: red; background-color: green; }*/
+  #currentSketch { position: absolute; left: 215px; width: 250px; }
 }
 #app-lr { width: 100%; flex: 1 1 0; overflow-y: hidden; display: flex; align-items: flex-start; gap: 10px; }
 #app-left { flex-grow: 1; height: 100%; display: flex; flex-direction: column; }

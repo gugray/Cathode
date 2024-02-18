@@ -11,7 +11,7 @@ let editors = {};
 let socket;
 let lpd8;
 
-let elmEmblem, elmResolution, elmHiDef;
+let elmEmblem, elmResolution, elmHiDef, elmCurrentSketch;
 
 async function init() {
   initGui();
@@ -78,11 +78,14 @@ function initGui() {
   elmEmblem = document.getElementById("emblem");
   elmResolution = document.getElementById("resolution");
   elmHiDef = document.getElementById("hidef");
+  elmCurrentSketch = document.getElementById("currentSketch");
 
   elmEmblem.addEventListener("click", () => {
     toggleAnimate();
     focusActiveEditor();
   });
+
+  elmCurrentSketch.addEventListener("change", () => onSketchChanged());
 
   safeGetStoredResolution();
   elmResolution.addEventListener("change", () => updateResolution());
@@ -108,6 +111,7 @@ function focusActiveEditor() {
 
 function flashActiveEditor(className) {
   const elmBg = document.querySelector("#tabContent .editorHost.active .editorBg");
+  if (!elmBg) return;
   if (elmBg.classList.contains(className)) return;
   elmBg.classList.add(className);
   setTimeout(() => elmBg.classList.remove(className), 200);
@@ -178,7 +182,7 @@ function initSocket() {
   socket = new WebSocket(SD.kSocketUrl + SD.kSocketPathComp);
   socket.addEventListener("open", () => {
     if (logComms) console.log("[COMP] Socket open");
-    requestActiveSketch();
+    requestSketchList();
     setTimeout(sendAllKnobVals, 100);
   });
   socket.addEventListener("message", (event) => {
@@ -193,15 +197,50 @@ function initSocket() {
   });
 }
 
-function requestActiveSketch() {
-  const msg = {
-    action: SD.ACTION.GetActiveSketch,
-  };
+function requestSketchList() {
+  const msg = { action: SD.ACTION.ListSketches };
+  socket.send(JSON.stringify(msg));
+}
+
+function onSketchChanged() {
+  const name = elmCurrentSketch.value;
+  if (name.startsWith("--")) return;
+  const msg = { action: SD.ACTION.ActivateSketch, name: name };
+  socket.send(JSON.stringify(msg));
+  localStorage.setItem("active-sketch", name);
+}
+
+function selectSavedSketch() {
+  // Retrieve stored sketch name; see if it's on list now
+  const storedName = localStorage.getItem("active-sketch");
+  if (!storedName) return;
+  const values = [];
+  for (const opt of elmCurrentSketch.options) values.push(opt.value);
+  if (values.indexOf(storedName) == -1) return;
+  // If it's on list, activate it
+  elmCurrentSketch.value = storedName;
+  const msg = { action: SD.ACTION.ActivateSketch, name: storedName };
   socket.send(JSON.stringify(msg));
 }
 
 function handleSocketMessage(msg) {
-  if (msg.action == SD.ACTION.Sketch) {
+  if (msg.action == SD.ACTION.ListSketches) {
+    // Populate dropdown
+    elmCurrentSketch.innerHTML = "";
+    const addSketch = name => {
+      const elm = document.createElement("option");
+      elm.value = name;
+      elm.innerText = name;
+      elmCurrentSketch.appendChild(elm);
+    };
+    addSketch("-------");
+    for (const name of msg.names) addSketch(name);
+    selectSavedSketch();
+  }
+  else if (msg.action == SD.ACTION.Sketch) {
+    // Remove old editors
+    document.getElementById("tabHeader").innerHTML = "";
+    document.getElementById("tabContent").innerHTML = "";
     // Main shader
     addEditor("main", msg.sketch.main, true);
     editors["main"].editor.cm.doc.setValue(msg.sketch.main);

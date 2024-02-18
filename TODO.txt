@@ -5,8 +5,10 @@ OK access controller
 OK multiple docs in editor
 OK calc shader -> delta time rate updates
 OK shaders in text files
+OK sketch selector drop-down
+-- save on Dropbox
 -- calc update creature comfort (variable index)
--- sketch selector drop-down
+-- factor out texture helpers in projector
 -- editor colors; matching brackets w/BG
 
 -- mega texture with full vid
