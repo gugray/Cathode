@@ -11,6 +11,7 @@ uniform float knob4;
 uniform float knob5;
 uniform float knob6;
 uniform float knob7;
+uniform sampler2D txData;
 uniform sampler2D txPrev;
 uniform sampler2D txClip0;
 out vec4 outColor;

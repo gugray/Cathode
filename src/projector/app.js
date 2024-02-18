@@ -1,6 +1,7 @@
 import sSweepVert from "../shader/sweep-vert.glsl";
 import sMainFrag from "../shader/main-frag.glsl";
 import sOutputDrawFrag from "../shader/output-draw-frag.glsl";
+import sDataCalcFrag from "../shader/data-calc-frag.glsl";
 import sDefaultGist from "../shader/default-gist.glsl";
 import * as twgl from "twgl.js";
 import { truncate } from "../common/utils.js";
@@ -8,14 +9,16 @@ import * as SD from "../common/server-defs.js";
 import {ACTION} from "../common/server-defs.js";
 
 const logComms = true;
-init();
+setTimeout(init, 50);
 
 let hiDef = false;
 let knobs = [0, 0, 0, 0, 0, 0, 0, 0];
 let webGLCanvas, gl, w, h;
 let sweepArrays, sweepBufferInfo;
-let progiMain, progiOutputDraw;
+let progiMain, progiOutputDraw, progiCalc;
 let txOutput0, txOutput1;
+let szData0 = 16;
+let txData0, txData1;
 let clip0;
 let socket;
 let sGist;
@@ -35,6 +38,28 @@ function init() {
     position: {numComponents: 2, data: [-1, -1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1]},
   };
   sweepBufferInfo = twgl.createBufferInfoFromArrays(gl, sweepArrays);
+
+  // Pingpong data texture
+  const dtData0A = new Float32Array(szData0 * szData0 * 4);
+  dtData0A.fill(0);
+  txData0 = twgl.createTexture(gl, {
+    internalFormat: gl.RGBA32F,
+    format: gl.RGBA,
+    type: gl.FLOAT,
+    width: szData0,
+    height: szData0,
+    src: dtData0A,
+  });
+  const dtData0B = new Float32Array(szData0 * szData0 * 4);
+  dtData0B.fill(0);
+  txData1 = twgl.createTexture(gl, {
+    internalFormat: gl.RGBA32F,
+    format: gl.RGBA,
+    type: gl.FLOAT,
+    width: szData0,
+    height: szData0,
+    src: dtData0B,
+  });
 
   resizeWorld();
   window.addEventListener("resize", () => {
@@ -226,8 +251,9 @@ function compilePrograms() {
   const mainFrag = sMainFrag.replace(ph, sGist);
   const npMain = recreate(sSweepVert, mainFrag);
   const npOutputDraw = recreate(sSweepVert, sOutputDrawFrag);
+  const npCalc = recreate(sSweepVert, sDataCalcFrag);
 
-  const compileOK = (npMain && npOutputDraw);
+  const compileOK = (npMain && npOutputDraw && npCalc);
   const msg = {
     action: SD.ACTION.Report,
     report: compileOK ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
@@ -239,16 +265,22 @@ function compilePrograms() {
   del(progiMain);
   progiMain = npMain;
   progiOutputDraw = npOutputDraw;
+  progiCalc = npCalc;
 }
 
 function frame(time) {
 
   if (animStartTime == -1) {
     animStartTime = time;
-    lastFrameTime = animStartTime - (1000 / 60);
+    lastFrameTime = time - (1000 / 60);
   }
-
+  const deltaTime = time - lastFrameTime;
+  lastFrameTime = time;
   time -= animStartTime;
+
+  console.log(deltaTime);
+
+  // Feed movie frames
   const frameIx = Math.round(time * 60 / 1000);
   if (clip0.tx && (frameIx % 2) == 0) {
     const clipIx = (frameIx/2) % clip0.frames.length;
@@ -268,8 +300,39 @@ function frame(time) {
     gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
+  // Run calculations, data0 -> data1
+  const unisCalc = {
+    dt: deltaTime,
+    txPrev: txData0,
+    knob0: knobs[0],
+    knob1: knobs[1],
+    knob2: knobs[2],
+    knob3: knobs[3],
+    knob4: knobs[4],
+    knob5: knobs[5],
+    knob6: knobs[6],
+    knob7: knobs[7],
+  }
+  // Bind frame buffer: texture to draw on
+  let atmsCalc = [{attachment: txData1}];
+  let fbufCalc = twgl.createFramebufferInfo(gl, atmsCalc, szData0, szData0);
+  twgl.bindFramebufferInfo(gl, fbufCalc);
+  // Set up size, program, uniforms
+  gl.viewport(0, 0, szData0, szData0);
+  gl.useProgram(progiCalc.program);
+  twgl.setBuffersAndAttributes(gl, progiCalc, sweepBufferInfo);
+  twgl.setUniforms(progiCalc, unisCalc);
+  // Clear to zeroes
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+  // Render fragment sweep
+  twgl.drawBufferInfo(gl, sweepBufferInfo);
+  // Swap buffers
+  [txData1, txData0] = [txData0, txData1];
+
   // Render to txOutput1
   const unisMain = {
+    txData: txData0,
     txPrev: txOutput0,
     txClip0: clip0.tx,
     resolution: [w, h],
