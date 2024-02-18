@@ -73,7 +73,7 @@ body {
   /*& option { color: red; background-color: green; }*/
 }
 #app-lr { width: 100%; flex: 1 1 0; overflow-y: hidden; display: flex; align-items: flex-start; gap: 10px; }
-#app-left { flex-grow: 1; height: 100%; }
+#app-left { flex-grow: 1; height: 100%; display: flex; flex-direction: column; }
 #app-right { border: 1px solid var(--clrTextFaintest); }
 #previewFrame { border: 0; padding: 0; margin: 0; }
 .preview { height: var(--previewHeight); width: var(--previewWidth); }
@@ -84,24 +84,45 @@ body {
   &:hover { filter: drop-shadow(0px 0px 6px var(--clrControlHover)); }
 }
 
-#editorHost {
-  position: relative; background-color: var(--clrEditorBg);
-  width: 100%; height: 100%;
-  border: 1px solid var(--clrTextFaintest);
+#tabHost {
+  flex-grow: 1;
+  display: flex; flex-direction: column; width: 100%; max-height: 100%;
 }
-#editorBg {
+#tabContent { flex-grow: 1; min-height: 0; }
+
+#tabHeader {
+  height: 32px; display: flex;
+  & button {
+    display: block;
+    background-color: var(--clrPanelBg); color: var(--clrTextFaint); font-size: var(--fntSizeTitle);
+    border: 1px solid var(--clrTextFaintest); border-bottom: none; padding: 0 10px;
+    &:first-of-type { border-right: none; }
+    &.active, &.active:hover { background-color: var(--clrControlBg); }
+    &:hover { background-color: var(--clrPanelBgLighter); }
+  }
+}
+
+.editorHost {
+  display: none;
+  &.active { display: block; }
+  position: relative; background-color: var(--clrEditorBg);
+  width: 100%; height: 100%; border: 1px solid var(--clrTextFaintest);
+  & .CodeMirror-linenumber { color: var(--clrTextFainter); }
+}
+.editorBg {
   position: absolute; width: 100%; height: 100%;
   background-color: black; opacity: 0.0;
   transition: background-color ease-out 1.5s, opacity  ease-out 1.5s;
 }
-#editorBg.error { background-color: red; transition: none; opacity: 0.2; }
-#editorBg.apply { background-color: #aaa; transition: none; opacity: 0.2; }
-#editorHost .CodeMirror.cm-s-monokai {
-  height: 100%; font-family: var(--fntMono); font-size: var(--fntSizeBase);
+.editorBg.error { background-color: red; transition: none; opacity: 0.2; }
+.editorBg.apply { background-color: #aaa; transition: none; opacity: 0.2; }
+.editorHost .CodeMirror.cm-s-monokai {
+  font-family: var(--fntMono); font-size: var(--fntSizeBase);
+  max-height: 100%; height: 100%;
   color: var(--clrText);
   background-color: transparent;
   & .CodeMirror-gutters { background-color: transparent; }
-  & .cm-scroller { font-family: var(--fntMono); }
+  & .cm-scroller { font-family: var(--fntMono); overflow-y: auto; }
   & .cm-gutters { background-color: transparent; border: none; }
   & .cm-activeLineGutter { background-color: #303030; }
   & .cm-content { background-color: transparent; }
@@ -118,10 +139,6 @@ body {
   & .cm-comment { color: #a4c7a4; }
   & .cm-variable {color: var(--clrText); }
 }
-#editorHost {
-  & .CodeMirror-linenumber { color: var(--clrTextFainter); }
-}
-
 
 
 

@@ -5,17 +5,16 @@ import { truncate } from "../common/utils.js";
 import * as SD from "../common/server-defs.js";
 
 const logComms = true;
-void init();
+setTimeout(() => void init(), 50);
 
+let editors = {};
 let socket;
-let editor;
 let lpd8;
 
-let elmEmblem, elmBg, elmResolution, elmHiDef;
+let elmEmblem, elmResolution, elmHiDef;
 
 async function init() {
   initGui();
-  initEditor();
   initSocket();
   initMidi();
 }
@@ -41,12 +40,55 @@ function sendAllKnobVals() {
 }
 
 
-function initEditor() {
-  const elmHost = document.getElementById("editorHost");
-  elmHost.style.display = "block";
-  editor = new Editor(elmHost);
-  editor.onSubmit = () => submitShader();
+function addEditor(name, content, active) {
+
+  const elmHost = document.createElement("div");
+  elmHost.classList.add("editorHost");
+  if (active) elmHost.classList.add("active");
+  elmHost.dataset.name = name;
+  elmHost.innerHTML = '<div class="editorBg"></div>';
+  document.getElementById("tabContent").appendChild(elmHost);
+
+  const editor = new Editor(elmHost);
+  editor.onSubmit = () => submitShader(name);
   editor.onToggleAnimate = () => toggleAnimate();
+  editor.cm.doc.setValue(content);
+  editors[name] = {elmHost, editor};
+
+  const elmBtn = document.createElement("button");
+  elmBtn.dataset.name = name;
+  elmBtn.innerText = name;
+  if (active) elmBtn.classList.add("active");
+  document.getElementById("tabHeader").appendChild(elmBtn);
+
+  elmBtn.addEventListener("click", () => {
+    const btns = document.querySelectorAll("#tabHeader button");
+    const hosts = document.querySelectorAll("#tabContent .editorHost");
+    for (const btn of btns) btn.classList.remove("active");
+    for (const host of hosts) host.classList.remove("active");
+    elmBtn.classList.add("active");
+    document.querySelector(`#tabContent .editorHost[data-name="${name}"]`).classList.add("active");
+    editor.cm.refresh();
+    focusActiveEditor();
+  });
+}
+
+function initGui() {
+
+  elmEmblem = document.getElementById("emblem");
+  elmResolution = document.getElementById("resolution");
+  elmHiDef = document.getElementById("hidef");
+
+  elmEmblem.addEventListener("click", () => {
+    toggleAnimate();
+    focusActiveEditor();
+  });
+
+  safeGetStoredResolution();
+  elmResolution.addEventListener("change", () => updateResolution());
+
+  safeGetStoredHiDef();
+  elmHiDef.addEventListener("click", () => toggleHiDef());
 
   document.body.addEventListener("keydown", e => {
     let handled = false;
@@ -58,23 +100,17 @@ function initEditor() {
   });
 }
 
-function initGui() {
+function focusActiveEditor() {
+  const elmHost = document.querySelector("#tabContent .editorHost.active");
+  const editor = editors[elmHost.dataset.name].editor;
+  editor.cm.display.input.focus();
+}
 
-  elmBg = document.getElementById("editorBg");
-  elmEmblem = document.getElementById("emblem");
-  elmResolution = document.getElementById("resolution");
-  elmHiDef = document.getElementById("hidef");
-
-  elmEmblem.addEventListener("click", () => {
-    toggleAnimate();
-    editor.cm.display.input.focus();
-  });
-
-  safeGetStoredResolution();
-  elmResolution.addEventListener("change", () => updateResolution());
-
-  safeGetStoredHiDef();
-  elmHiDef.addEventListener("click", () => toggleHiDef());
+function flashActiveEditor(className) {
+  const elmBg = document.querySelector("#tabContent .editorHost.active .editorBg");
+  if (elmBg.classList.contains(className)) return;
+  elmBg.classList.add(className);
+  setTimeout(() => elmBg.classList.remove(className), 200);
 }
 
 function safeGetStoredHiDef() {
@@ -164,35 +200,34 @@ function requestActiveSketch() {
   socket.send(JSON.stringify(msg));
 }
 
-function flashEditor(className) {
-  if (elmBg.classList.contains(className)) return;
-  elmBg.classList.add(className);
-  setTimeout(() => elmBg.classList.remove(className), 200);
-}
-
 function handleSocketMessage(msg) {
   if (msg.action == SD.ACTION.Sketch) {
-    if (msg.sketch.hasOwnProperty("main"))
-      editor.cm.doc.setValue(msg.sketch.main);
-    else {
-      editor.cm.doc.setValue(sDefaultMain);
-      void submitShader();
+    // Main shader
+    addEditor("main", msg.sketch.main, true);
+    editors["main"].editor.cm.doc.setValue(msg.sketch.main);
+    // Optional: calc shader
+    let calcGlsl = null;
+    if (msg.sketch.hasOwnProperty("calc")) calcGlsl = msg.sketch.calc;
+    if (calcGlsl) {
+      addEditor("calc", msg.sketch.calc, false);
+      editors["calc"].editor.cm.doc.setValue(msg.sketch.calc);
     }
   }
   else if (msg.action == SD.ACTION.Report) {
-    if (msg.report == SD.REPORT.BadCode) flashEditor("error");
-    else if (msg.report == SD.REPORT.ShaderUpdated) flashEditor("apply");
+    if (msg.report == SD.REPORT.BadCode) flashActiveEditor("error");
+    else if (msg.report == SD.REPORT.ShaderUpdated) flashActiveEditor("apply");
     else if (msg.report == SD.REPORT.CanvasSize) {
       console.log(`Canvas size: ${msg.w} x ${msg.h}`);
     }
   }
 }
 
-async function submitShader() {
+async function submitShader(name) {
   if (socket == null) return;
   const msg = {
-    action: SD.ACTION.UpdateActiveSketchMain,
-    main: editor.cm.doc.getValue(),
+    action: SD.ACTION.UpdateActiveSketchShader,
+    name: name,
+    shaderCode: editors[name].editor.cm.doc.getValue(),
   };
   socket.send(JSON.stringify(msg));
 }

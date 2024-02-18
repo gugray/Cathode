@@ -39,10 +39,9 @@ export async function load(dataDir, sketchName) {
   sketch.calc = null;
   const fnMain = path.join(dataDir, `${sketch.name}.main.glsl`);
   sketch.main = await fs.readFile(fnMain, "utf8");
-  if (sketch.calc) {
-    const fnCalc = path.join(dataDir, `${sketch.name}.calc.glsl`);
+  const fnCalc = path.join(dataDir, `${sketch.name}.calc.glsl`);
+  if (await existsAsync(fnCalc))
     sketch.calc = await fs.readFile(fnCalc, "utf8");
-  }
   return sketch;
 }
 

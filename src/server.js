@@ -112,11 +112,12 @@ function handleComposerMessage(msg) {
     }
     compSocket.send(JSON.stringify(resp));
   }
-  else if (msg.action == SD.ACTION.UpdateActiveSketchMain) {
-    activeSketch.main = msg.main;
+  else if (msg.action == SD.ACTION.UpdateActiveSketchShader) {
+    activeSketch[msg.name] = msg.shaderCode;
     const out = {
-      action: SD.ACTION.SketchMain,
-      main: activeSketch.main,
+      action: SD.ACTION.SketchShader,
+      name: msg.name,
+      shaderCode: msg.shaderCode,
     };
     const outStr = JSON.stringify(out);
     for (const ps of projSockets) ps.send(outStr);

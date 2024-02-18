@@ -1,12 +1,13 @@
 import sSweepVert from "../shader/sweep-vert.glsl";
+import sCalcFrag from "../shader/calc-frag.glsl";
 import sMainFrag from "../shader/main-frag.glsl";
 import sOutputDrawFrag from "../shader/output-draw-frag.glsl";
-import sDataCalcFrag from "../shader/data-calc-frag.glsl";
-import sDefaultMain from "../shader/default-main.glsl";
 import * as twgl from "twgl.js";
 import { truncate } from "../common/utils.js";
 import * as SD from "../common/server-defs.js";
 import {ACTION} from "../common/server-defs.js";
+
+import "../common/types.js"
 
 const logComms = true;
 setTimeout(init, 50);
@@ -19,9 +20,11 @@ let progiMain, progiOutputDraw, progiCalc;
 let txOutput0, txOutput1;
 let szData0 = 16;
 let txData0, txData1;
+/** @type {ProjectorClip} */
 let clip0;
 let socket;
 let sMain;
+let sCalc;
 let animating = false;
 let animStartTime = -1;
 let lastFrameTime = -1;
@@ -70,14 +73,6 @@ function init() {
   initGui();
 
   setTimeout(() => safeReportSize(), 500);
-
-  // TODO: Remove once clips are part of sketches
-  clip0 = {
-    frames: [],
-    dims: [0, 0],
-    tx: null,
-  };
-  void getClipFrames("wind", clip0);
 }
 
 function initSocket() {
@@ -107,11 +102,17 @@ function handleSocketMessage(msg) {
   if (msg.action == SD.ACTION.Sketch) {
     if (!msg.sketch.hasOwnProperty("main"))
       return;
-    updateMain(msg.sketch.main);
-    // TODO: Fetch clip frame once they are defined in sketch
+    updateShaders([
+      { name: "main", shaderCode: msg.sketch.main },
+      { name: "calc", shaderCode: msg.sketch.calc ?? null }
+    ]);
+    if (msg.sketch.clips.length > 0) {
+      clip0 = makeEmptyClip();
+      void getClipFrames(msg.sketch.clips[0], clip0);
+    }
   }
-  else if (msg.action == SD.ACTION.SketchMain) {
-    updateMain(msg.main);
+  else if (msg.action == SD.ACTION.SketchShader) {
+    updateShaders([msg]);
   }
   else if (msg.action == SD.ACTION.Command) {
     if (msg.command == SD.COMMAND.SetAnimate) {
@@ -132,6 +133,14 @@ function handleSocketMessage(msg) {
       console.log(knobs); // DBG
     }
   }
+}
+
+function makeEmptyClip() {
+  return {
+    frames: [],
+    dims: [0, 0],
+    tx: null,
+  };
 }
 
 function initGui() {
@@ -196,9 +205,13 @@ function safeReportSize() {
   socket.send(JSON.stringify(msg));
 }
 
-function updateMain(newMain) {
+function updateShaders(infos) {
   const isFirstUpdate = sMain == null;
-  sMain = newMain;
+  for (const i of infos) {
+    if (i.name == "main") sMain = i.shaderCode;
+    else if (i.name == "calc") sCalc = i.shaderCode;
+    else console.log("[PROJ] update for unknown shader: " + i.name);
+  }
   compilePrograms();
   if (isFirstUpdate || !animating)
     requestAnimationFrame(frame);
@@ -247,13 +260,20 @@ function compilePrograms() {
   const del = pi => { if (pi && pi.program) gl.deleteProgram(pi.program); }
   const recreate = (v, f) => twgl.createProgramInfo(gl, [v, f]);
 
-  const ph = "// MAIN.GLSL"; // Placeholder text
-  const mainFrag = sMainFrag.replace(ph, sMain);
-  const npMain = recreate(sSweepVert, mainFrag);
+  // Fixed programs
   const npOutputDraw = recreate(sSweepVert, sOutputDrawFrag);
-  const npCalc = recreate(sSweepVert, sDataCalcFrag);
 
-  const compileOK = (npMain && npOutputDraw && npCalc);
+  // Calc
+  const phCalc = "// CALC.GLSL"; // Placeholder text
+  const calcFrag = sCalcFrag.replace(phCalc, sCalc);
+  const npCalc = recreate(sSweepVert, calcFrag);
+
+  // Main fragment
+  const phMain = "// MAIN.GLSL"; // Placeholder text
+  const mainFrag = sMainFrag.replace(phMain, sMain);
+  const npMain = recreate(sSweepVert, mainFrag);
+
+  const compileOK = (npMain && npCalc && npOutputDraw);
   const msg = {
     action: SD.ACTION.Report,
     report: compileOK ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
@@ -280,7 +300,7 @@ function frame(time) {
 
   // Feed movie frames
   const frameIx = Math.round(time * 60 / 1000);
-  if (clip0.tx && (frameIx % 2) == 0) {
+  if (clip0 && clip0.tx && (frameIx % 2) == 0) {
     const clipIx = (frameIx/2) % clip0.frames.length;
     const data = clip0.frames[clipIx];
     gl.bindTexture(gl.TEXTURE_2D, clip0.tx);
@@ -332,7 +352,7 @@ function frame(time) {
   const unisMain = {
     txData: txData0,
     txPrev: txOutput0,
-    txClip0: clip0.tx,
+    txClip0: clip0 ? clip0.tx : null,
     resolution: [w, h],
     time: time,
     knob0: knobs[0],

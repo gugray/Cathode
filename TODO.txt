@@ -1,10 +1,12 @@
 To extract frames from video:
 ffmpeg -i clip.mp4 -vf vflip -r 30 frame%03d.png
 
--- access controller
--- multiple docs in editor
--- calc shader -> delta time rate updates
--- multiple sketches; shaders in text files
+OK access controller
+OK multiple docs in editor
+OK calc shader -> delta time rate updates
+OK shaders in text files
+-- calc update creature comfort (variable index)
+-- sketch selector drop-down
 -- editor colors; matching brackets w/BG
 
 -- mega texture with full vid
