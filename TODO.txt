@@ -6,7 +6,7 @@ OK multiple docs in editor
 OK calc shader -> delta time rate updates
 OK shaders in text files
 OK sketch selector drop-down
--- save on Dropbox
+OK data path from envvar
 -- calc update creature comfort (variable index)
 -- factor out texture helpers in projector
 -- editor colors; matching brackets w/BG

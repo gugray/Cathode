@@ -10,7 +10,8 @@ import * as SD from "./common/server-defs.js";
 import * as Sketch from "./sketch.js";
 import {kSocketPathProj} from "./common/server-defs.js";
 
-const dataDir = "./data";
+const dataDirEnv = "CATHODE_DATA";
+let dataDir = "./data";
 let activeSketch = null;
 let activeSketchName = null;
 const projSockets = [];
@@ -18,6 +19,11 @@ let compSocket = null;
 
 // This is the entry point: starts servers
 export async function run(port) {
+
+  // Use custom data folder, if envvar present
+  if (process.env.hasOwnProperty(dataDirEnv))
+    dataDir = process.env[dataDirEnv];
+  console.log(`Using data directory: ${dataDir}`);
 
   // Create app, server, web socket servers
   const app = express();
