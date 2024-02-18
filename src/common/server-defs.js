@@ -6,8 +6,8 @@ export const kSocketPathComp = "/comp";
 export const ACTION = {
   GetActiveSketch: "get-active-sketch",
   Sketch: "sketch",
-  SketchGist: "sketch-gist",
-  UpdateActiveSketchGist: "update-active-sketch-gist",
+  SketchMain: "sketch-main",
+  UpdateActiveSketchMain: "update-active-sketch-main",
 
   // Command from composer to projectors
   Command: "command",

@@ -2,7 +2,7 @@ import sSweepVert from "../shader/sweep-vert.glsl";
 import sMainFrag from "../shader/main-frag.glsl";
 import sOutputDrawFrag from "../shader/output-draw-frag.glsl";
 import sDataCalcFrag from "../shader/data-calc-frag.glsl";
-import sDefaultGist from "../shader/default-gist.glsl";
+import sDefaultMain from "../shader/default-main.glsl";
 import * as twgl from "twgl.js";
 import { truncate } from "../common/utils.js";
 import * as SD from "../common/server-defs.js";
@@ -21,7 +21,7 @@ let szData0 = 16;
 let txData0, txData1;
 let clip0;
 let socket;
-let sGist;
+let sMain;
 let animating = false;
 let animStartTime = -1;
 let lastFrameTime = -1;
@@ -105,13 +105,13 @@ function requestActiveSketch() {
 
 function handleSocketMessage(msg) {
   if (msg.action == SD.ACTION.Sketch) {
-    if (!msg.sketch.hasOwnProperty("gist"))
+    if (!msg.sketch.hasOwnProperty("main"))
       return;
-    updateGist(msg.sketch.gist);
+    updateMain(msg.sketch.main);
     // TODO: Fetch clip frame once they are defined in sketch
   }
-  else if (msg.action == SD.ACTION.SketchGist) {
-    updateGist(msg.gist);
+  else if (msg.action == SD.ACTION.SketchMain) {
+    updateMain(msg.main);
   }
   else if (msg.action == SD.ACTION.Command) {
     if (msg.command == SD.COMMAND.SetAnimate) {
@@ -196,9 +196,9 @@ function safeReportSize() {
   socket.send(JSON.stringify(msg));
 }
 
-function updateGist(newGist) {
-  const isFirstUpdate = sGist == null;
-  sGist = newGist;
+function updateMain(newMain) {
+  const isFirstUpdate = sMain == null;
+  sMain = newMain;
   compilePrograms();
   if (isFirstUpdate || !animating)
     requestAnimationFrame(frame);
@@ -247,8 +247,8 @@ function compilePrograms() {
   const del = pi => { if (pi && pi.program) gl.deleteProgram(pi.program); }
   const recreate = (v, f) => twgl.createProgramInfo(gl, [v, f]);
 
-  const ph = "// GIST.GLSL"; // Placeholder text
-  const mainFrag = sMainFrag.replace(ph, sGist);
+  const ph = "// MAIN.GLSL"; // Placeholder text
+  const mainFrag = sMainFrag.replace(ph, sMain);
   const npMain = recreate(sSweepVert, mainFrag);
   const npOutputDraw = recreate(sSweepVert, sOutputDrawFrag);
   const npCalc = recreate(sSweepVert, sDataCalcFrag);
@@ -277,8 +277,6 @@ function frame(time) {
   const deltaTime = time - lastFrameTime;
   lastFrameTime = time;
   time -= animStartTime;
-
-  console.log(deltaTime);
 
   // Feed movie frames
   const frameIx = Math.round(time * 60 / 1000);

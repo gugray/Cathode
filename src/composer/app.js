@@ -1,6 +1,6 @@
 import {Editor} from "./editor.js";
 import {LPD8} from "./lpd8.js";
-import sDefaultGist from "../shader/default-gist.glsl";
+import sDefaultMain from "../shader/default-main.glsl";
 import { truncate } from "../common/utils.js";
 import * as SD from "../common/server-defs.js";
 
@@ -172,10 +172,10 @@ function flashEditor(className) {
 
 function handleSocketMessage(msg) {
   if (msg.action == SD.ACTION.Sketch) {
-    if (msg.sketch.hasOwnProperty("gist"))
-      editor.cm.doc.setValue(msg.sketch.gist);
+    if (msg.sketch.hasOwnProperty("main"))
+      editor.cm.doc.setValue(msg.sketch.main);
     else {
-      editor.cm.doc.setValue(sDefaultGist);
+      editor.cm.doc.setValue(sDefaultMain);
       void submitShader();
     }
   }
@@ -191,8 +191,8 @@ function handleSocketMessage(msg) {
 async function submitShader() {
   if (socket == null) return;
   const msg = {
-    action: SD.ACTION.UpdateActiveSketchGist,
-    gist: editor.cm.doc.getValue(),
+    action: SD.ACTION.UpdateActiveSketchMain,
+    main: editor.cm.doc.getValue(),
   };
   socket.send(JSON.stringify(msg));
 }

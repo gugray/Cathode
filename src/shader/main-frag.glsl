@@ -18,4 +18,4 @@ out vec4 outColor;
 
 #include "helpers.glsl"
 #include "sdf.glsl"
-// GIST.GLSL
+// MAIN.GLSL

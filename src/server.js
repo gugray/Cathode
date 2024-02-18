@@ -7,16 +7,17 @@ import { createReadStream } from 'fs';
 import * as path from "path";
 import { truncate } from "./common/utils.js";
 import * as SD from "./common/server-defs.js";
+import * as Sketch from "./sketch.js";
 import {kSocketPathProj} from "./common/server-defs.js";
 
 const dataDir = "./data";
-let activeSketch = {};
-let activeSketchName = "default";
+let activeSketch;
+let activeSketchName = "henlo";
 const projSockets = [];
 let compSocket = null;
 
 // Start by loading default sketch
-await loadActiveSketch();
+activeSketch = await Sketch.load(dataDir, activeSketchName);
 
 // This is the entry point: starts servers
 export async function run(port) {
@@ -111,15 +112,15 @@ function handleComposerMessage(msg) {
     }
     compSocket.send(JSON.stringify(resp));
   }
-  else if (msg.action == SD.ACTION.UpdateActiveSketchGist) {
-    activeSketch.gist = msg.gist;
+  else if (msg.action == SD.ACTION.UpdateActiveSketchMain) {
+    activeSketch.main = msg.main;
     const out = {
-      action: SD.ACTION.SketchGist,
-      gist: activeSketch.gist,
+      action: SD.ACTION.SketchMain,
+      main: activeSketch.main,
     };
     const outStr = JSON.stringify(out);
     for (const ps of projSockets) ps.send(outStr);
-    void saveActiveSketch();
+    void Sketch.save(dataDir, activeSketch);
   }
   else if (msg.action == SD.ACTION.Command) {
     const outStr = JSON.stringify(msg);
@@ -139,30 +140,6 @@ function handleProjectorMessage(fromSocket, msg) {
   else if (msg.action == SD.ACTION.Report) {
     if (compSocket != null) compSocket.send(JSON.stringify(msg));
   }
-}
-
-async function existsAsync(filePath) {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-async function loadActiveSketch() {
-  activeSketch = {};
-  const fn = path.join(dataDir, `${activeSketchName}.json`);
-  const exists = await existsAsync(fn);
-  if (!exists) return;
-  const json = await fs.readFile(fn, 'utf8');
-  activeSketch = JSON.parse(json);
-}
-
-async function saveActiveSketch() {
-  const fn = path.join(dataDir, `${activeSketchName}.json`);
-  const json = JSON.stringify(activeSketch, null, 2);
-  await fs.writeFile(fn, json, 'utf8');
 }
 
 async function handleGetClip(req, res) {
