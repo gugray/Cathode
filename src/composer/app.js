@@ -12,6 +12,7 @@ let socket;
 let lpd8;
 
 let elmEmblem, elmResolution, elmHiDef, elmCurrentSketch;
+let elmInsetVideo;
 
 async function init() {
   initGui();
@@ -79,6 +80,7 @@ function initGui() {
   elmResolution = document.getElementById("resolution");
   elmHiDef = document.getElementById("hidef");
   elmCurrentSketch = document.getElementById("currentSketch");
+  elmInsetVideo = document.getElementById("insetVideo");
 
   elmEmblem.addEventListener("click", () => {
     toggleAnimate();
@@ -92,6 +94,8 @@ function initGui() {
 
   safeGetStoredHiDef();
   elmHiDef.addEventListener("click", () => toggleHiDef());
+
+  elmInsetVideo.addEventListener("click", () => toggleInsetVideo());
 
   document.body.addEventListener("keydown", e => {
     let handled = false;
@@ -164,6 +168,24 @@ function updateResolution() {
   r.style.setProperty("--previewWidth", `${w}px`);
   r.style.setProperty("--previewHeight", `${h}px`);
   localStorage.setItem("resolution", elmResolution.value);
+  const leftWidth = r.clientWidth - w - 32;
+  const editorHosts = document.querySelectorAll(".editorHost");
+  for (const elm of editorHosts)
+    elm.style.width = `${leftWidth}px`;
+}
+
+function toggleInsetVideo() {
+  const newVal = !elmInsetVideo.classList.contains("on");
+  if (newVal) elmInsetVideo.classList.add("on");
+  else elmInsetVideo.classList.remove("on");
+  if (!newVal) document.getElementById("previewFrame").remove();
+  else {
+    const elm = document.createElement("iframe");
+    elm.id = "previewFrame";
+    elm.classList.add("preview");
+    elm.src = "http://localhost:8081";
+    document.getElementById("previewHost").appendChild(elm);
+  }
 }
 
 function toggleAnimate() {
@@ -251,6 +273,8 @@ function handleSocketMessage(msg) {
       addEditor("calc", msg.sketch.calc, false);
       editors["calc"].editor.cm.doc.setValue(msg.sketch.calc);
     }
+    // Set sizes
+    updateResolution();
   }
   else if (msg.action == SD.ACTION.Report) {
     if (msg.report == SD.REPORT.BadCode) flashActiveEditor("error");

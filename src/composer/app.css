@@ -60,10 +60,17 @@ body {
   & h1 { margin: 7px 0 0 60px; font-size: 20px; font-weight: normal; display: inline-block; }
   & svg * { stroke: var(--clrControl); }
   & button {
-    float: right; margin: 8px 10px 0 0; background-color: var(--clrPanelBg);
+    float: right; margin: 8px 10px 0 0; height: 29px; background-color: var(--clrPanelBg);
     border: 1px solid var(--clrControl); color: var(--clrTextFaint); padding: 4px 10px;
     font-size: var(--fntSizeBase);
     &.on { background-color: var(--clrControlBg); }
+  }
+  & button.img {
+    padding: 0 10px;
+    & svg {
+      width: 26px; height: 26px; margin: 0; display: inline;
+      & * { stroke: var(--clrTextFainter); }
+    }
   }
   & select {
     float: right; margin: 8px 10px 0 0; background-color: var(--clrPanelBg);
@@ -74,7 +81,7 @@ body {
 }
 #app-lr { width: 100%; flex: 1 1 0; overflow-y: hidden; display: flex; align-items: flex-start; gap: 10px; }
 #app-left { flex-grow: 1; height: 100%; display: flex; flex-direction: column; }
-#app-right { border: 1px solid var(--clrTextFaintest); }
+#app-right { border: 1px solid var(--clrTextFaintest); flex-grow: 0; }
 #previewFrame { border: 0; padding: 0; margin: 0; }
 .preview { height: var(--previewHeight); width: var(--previewWidth); }
 
@@ -105,8 +112,9 @@ body {
 .editorHost {
   display: none;
   &.active { display: block; }
+  width: 300px;
   position: relative; background-color: var(--clrEditorBg);
-  width: 100%; height: 100%; border: 1px solid var(--clrTextFaintest);
+  height: 100%; border: 1px solid var(--clrTextFaintest);
   & .CodeMirror-linenumber { color: var(--clrTextFainter); }
 }
 .editorBg {
@@ -122,6 +130,7 @@ body {
   color: var(--clrText);
   background-color: transparent;
   & .CodeMirror-gutters { background-color: transparent; }
+  & .CodeMirror-scrollbar-filler { background-color: transparent; }
   & .cm-scroller { font-family: var(--fntMono); overflow-y: auto; }
   & .cm-gutters { background-color: transparent; border: none; }
   & .cm-activeLineGutter { background-color: #303030; }
