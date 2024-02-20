@@ -179,7 +179,7 @@ function toggleAnimate() {
 }
 
 function initSocket() {
-  socket = new WebSocket(SD.kSocketUrl + SD.kSocketPathComp);
+  socket = new WebSocket(SD.getSocketUrl() + SD.kSocketPathComp);
   socket.addEventListener("open", () => {
     if (logComms) console.log("[COMP] Socket open");
     requestSketchList();

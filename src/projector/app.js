@@ -77,7 +77,7 @@ function init() {
 }
 
 function initSocket() {
-  socket = new WebSocket(SD.kSocketUrl + SD.kSocketPathProj);
+  socket = new WebSocket(SD.getSocketUrl() + SD.kSocketPathProj);
   socket.addEventListener("open", () => {
     if (logComms) console.log("[PROJ] Socket open");
     requestActiveSketch();

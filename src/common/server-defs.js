@@ -1,7 +1,10 @@
 export const kServerUrl = "http://localhost:8090";
-export const kSocketUrl = "ws://localhost:8090";
 export const kSocketPathProj = "/proj";
 export const kSocketPathComp = "/comp";
+
+export function getSocketUrl() {
+  return "ws://" + window.location.hostname + ":8090";
+}
 
 export const ACTION = {
   ListSketches: "list-sketches",
