@@ -2,15 +2,12 @@
 precision highp float;
 
 uniform float time;
+uniform float vol;
+uniform float fft[4];
+uniform float beat;
+uniform float knobs[8];
+
 uniform vec2 resolution;
-uniform float knob0;
-uniform float knob1;
-uniform float knob2;
-uniform float knob3;
-uniform float knob4;
-uniform float knob5;
-uniform float knob6;
-uniform float knob7;
 uniform sampler2D txData;
 uniform sampler2D txPrev;
 uniform sampler2D txClip0;

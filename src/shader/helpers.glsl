@@ -8,3 +8,13 @@ vec3 txFetchUV(sampler2D tx, vec2 p) {
     return texture(tx, p).rgb;
 }
 
+#define TX_DATA_SZ 16
+
+float getData(int ix) {
+    int j = ix / 4;
+    int k = ix % 4;
+    int y = j / TX_DATA_SZ;
+    int x = j % TX_DATA_SZ;
+    vec4 v = texelFetch(txData, ivec2(x, y), 0);
+    return v[k];
+}

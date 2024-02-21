@@ -4,6 +4,7 @@ import sMainFrag from "../shader/main-frag.glsl";
 import sDefaultCalc from "../shader/default-calc.glsl";
 import sOutputDrawFrag from "../shader/output-draw-frag.glsl";
 import * as twgl from "twgl.js";
+import Audio from "./audio.js";
 import { truncate } from "../common/utils.js";
 import * as SD from "../common/server-defs.js";
 import {ACTION} from "../common/server-defs.js";
@@ -14,6 +15,7 @@ const logComms = true;
 setTimeout(init, 50);
 
 let hiDef = false;
+let audio;
 let knobs = [0, 0, 0, 0, 0, 0, 0, 0];
 let webGLCanvas, gl, w, h;
 let sweepArrays, sweepBufferInfo;
@@ -31,6 +33,10 @@ let animStartTime = -1;
 let lastFrameTime = -1;
 
 function init() {
+
+  audio = new Audio({});
+  audio.setCutoff(0.1);
+  audio.setScale(20);
 
   // 3D WebGL canvas, and twgl
   webGLCanvas = document.getElementById("webgl-canvas");
@@ -291,6 +297,8 @@ function compilePrograms() {
 
 function frame(time) {
 
+  if (audio) audio.tick();
+
   if (animStartTime == -1) {
     animStartTime = time;
     lastFrameTime = time - (1000 / 60);
@@ -321,16 +329,13 @@ function frame(time) {
 
   // Run calculations, data0 -> data1
   const unisCalc = {
-    dt: deltaTime,
     txPrev: txData0,
-    knob0: knobs[0],
-    knob1: knobs[1],
-    knob2: knobs[2],
-    knob3: knobs[3],
-    knob4: knobs[4],
-    knob5: knobs[5],
-    knob6: knobs[6],
-    knob7: knobs[7],
+    time: time,
+    dt: deltaTime,
+    vol: audio.vol,
+    fft: audio.fft,
+    beat: audio.isBeat ? 1 : 0,
+    knobs: knobs,
   }
   // Bind frame buffer: texture to draw on
   let atmsCalc = [{attachment: txData1}];
@@ -356,14 +361,10 @@ function frame(time) {
     txClip0: clip0 ? clip0.tx : null,
     resolution: [w, h],
     time: time,
-    knob0: knobs[0],
-    knob1: knobs[1],
-    knob2: knobs[2],
-    knob3: knobs[3],
-    knob4: knobs[4],
-    knob5: knobs[5],
-    knob6: knobs[6],
-    knob7: knobs[7],
+    vol: audio.vol,
+    fft: audio.fft,
+    beat: audio.isBeat ? 1 : 0,
+    knobs: knobs,
   }
   // Bind frame buffer: texture to draw on
   let atmsPR = [{attachment: txOutput1}];

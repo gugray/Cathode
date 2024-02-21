@@ -184,6 +184,7 @@ function toggleInsetVideo() {
     elm.id = "previewFrame";
     elm.classList.add("preview");
     elm.src = "http://localhost:8081";
+    elm.allow = "camera *;microphone *";
     document.getElementById("previewHost").appendChild(elm);
   }
 }
