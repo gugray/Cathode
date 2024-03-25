@@ -21,6 +21,7 @@ export function makeEmpty(name) {
     name: name,
     main: "",
     calc: null,
+    ctrl: null,
     clips: [],
   };
 }
@@ -54,11 +55,15 @@ export async function load(dataDir, sketchName) {
   const sketch = JSON.parse(json);
   sketch.name = sketchName;
   sketch.calc = null;
+  sketch.ctrl = null;
   const fnMain = path.join(dataDir, `${sketch.name}.main.glsl`);
   sketch.main = await fs.readFile(fnMain, "utf8");
   const fnCalc = path.join(dataDir, `${sketch.name}.calc.glsl`);
   if (await existsAsync(fnCalc))
     sketch.calc = await fs.readFile(fnCalc, "utf8");
+  const fnCtrl = path.join(dataDir, `${sketch.name}.ctrl.js`)
+  if (await existsAsync(fnCtrl))
+    sketch.ctrl = await fs.readFile(fnCtrl, "utf8");
   return sketch;
 }
 
@@ -73,6 +78,10 @@ export async function save(dataDir, sketch) {
   if (sketch.calc) {
     const fnCalc = path.join(dataDir, `${sketch.name}.calc.glsl`);
     await fs.writeFile(fnCalc, sketch.calc, "utf8");
+  }
+  if (sketch.ctrl) {
+    const fnCtrl = path.join(dataDir, `${sketch.name}.ctrl.js`);
+    await fs.writeFile(fnCtrl, sketch.ctrl, "utf8");
   }
 }
 

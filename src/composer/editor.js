@@ -16,29 +16,32 @@ import 'codemirror/addon/display/rulers';
 import 'codemirror/addon/display/panel';
 import 'codemirror/addon/hint/show-hint';
 import 'codemirror/mode/clike/clike.js';
+import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/keymap/sublime';
 
 
 class Editor {
-  constructor(parent) {
+  constructor(parent, mode) {
 
     this.parent = parent;
     this.onSubmit = null;
     this.onToggleAnimate = null;
+
+    const spaces = mode == "x-shader/x-fragment" ? 4 : 2;
 
     this.cm = CodeMirror(parent, {
       value: "void hello() {}",
       viewportMargin: Infinity,
       lineNumbers: true,
       matchBrackets: true,
-      mode: 'x-shader/x-fragment',
+      mode: mode,
       keyMap: 'sublime',
       autoCloseBrackets: true,
       showCursorWhenSelecting: true,
       theme: "monokai",
       dragDrop: false,
-      indentUnit: 4,
-      tabSize: 4,
+      indentUnit: spaces,
+      tabSize: spaces,
       indentWithTabs: false,
       gutters: ["CodeMirror-linenumbers"],
       lineWrapping: false,

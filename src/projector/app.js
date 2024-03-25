@@ -18,6 +18,7 @@ let hiDef = false;
 let audio;
 let volFactor = 0.02;
 let knobs = [0, 0, 0, 0, 0, 0, 0, 0];
+let ctrl;
 let webGLCanvas, gl, w, h;
 let sweepArrays, sweepBufferInfo;
 let progiMain, progiOutputDraw, progiCalc;
@@ -36,6 +37,7 @@ let lastFrameTime = -1;
 function init() {
 
   audio = new Audio({});
+  ctrl = makeDefaultCtrl();
 
   // 3D WebGL canvas, and twgl
   webGLCanvas = document.getElementById("webgl-canvas");
@@ -108,7 +110,7 @@ function handleSocketMessage(msg) {
   if (msg.action == SD.ACTION.Sketch) {
     if (!msg.sketch.hasOwnProperty("main"))
       return;
-    updateShaders([
+    updatePrograms([
       { name: "main", shaderCode: msg.sketch.main },
       { name: "calc", shaderCode: msg.sketch.calc ?? null }
     ]);
@@ -118,7 +120,7 @@ function handleSocketMessage(msg) {
     }
   }
   else if (msg.action == SD.ACTION.SketchShader) {
-    updateShaders([msg]);
+    updatePrograms([msg]);
   }
   else if (msg.action == SD.ACTION.Command) {
     if (msg.command == SD.COMMAND.SetAnimate) {
@@ -211,16 +213,48 @@ function safeReportSize() {
   socket.send(JSON.stringify(msg));
 }
 
-function updateShaders(infos) {
+function updatePrograms(infos) {
   const isFirstUpdate = sMain == null;
+  let compileOK = true;
   for (const i of infos) {
     if (i.name == "main") sMain = i.shaderCode;
     else if (i.name == "calc") sCalc = i.shaderCode ?? sDefaultCalc;
+    else if (i.name == "ctrl") compileOK &= updateControl(i.shaderCode);
     else console.log("[PROJ] update for unknown shader: " + i.name);
   }
-  compilePrograms();
+  compileOK &= compilePrograms();
+  // Lett composer know
+  const msg = {
+    action: SD.ACTION.Report,
+    report: compileOK ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
+  };
+  socket.send(JSON.stringify(msg));
+  // Redraw if we're not animating
   if (isFirstUpdate || !animating)
     requestAnimationFrame(frame);
+}
+
+function updateControl(jsCode) {
+  let compileOK = false;
+  try {
+    const fun = new Function(jsCode);
+    ctrl = fun();
+    compileOK = true;
+  }
+  catch {
+    compileOK = false;
+  }
+  const msg = {
+    action: SD.ACTION.Report,
+    report: compileOK ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
+  };
+  socket.send(JSON.stringify(msg));
+}
+
+function makeDefaultCtrl() {
+  return {
+
+  };
 }
 
 async function getClipFrames(clipName, clip) {
@@ -280,18 +314,13 @@ function compilePrograms() {
   const npMain = recreate(sSweepVert, mainFrag);
 
   const compileOK = (npMain && npCalc && npOutputDraw);
-  const msg = {
-    action: SD.ACTION.Report,
-    report: compileOK ? SD.REPORT.ShaderUpdated : SD.REPORT.BadCode,
-  };
-  socket.send(JSON.stringify(msg));
-
-  if (!compileOK) return;
+  if (!compileOK) return false;
 
   del(progiMain);
   progiMain = npMain;
   progiOutputDraw = npOutputDraw;
   progiCalc = npCalc;
+  return true;
 }
 
 function frame(time) {

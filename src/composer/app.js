@@ -41,7 +41,7 @@ function sendAllKnobVals() {
 }
 
 
-function addEditor(name, content, active) {
+function addEditor(name, content, mode, active) {
 
   const elmHost = document.createElement("div");
   elmHost.classList.add("editorHost");
@@ -50,7 +50,7 @@ function addEditor(name, content, active) {
   elmHost.innerHTML = '<div class="editorBg"></div>';
   document.getElementById("tabContent").appendChild(elmHost);
 
-  const editor = new Editor(elmHost);
+  const editor = new Editor(elmHost, mode);
   editor.onSubmit = () => submitShader(name);
   editor.onToggleAnimate = () => toggleAnimate();
   editor.cm.doc.setValue(content);
@@ -265,14 +265,21 @@ function handleSocketMessage(msg) {
     document.getElementById("tabHeader").innerHTML = "";
     document.getElementById("tabContent").innerHTML = "";
     // Main shader
-    addEditor("main", msg.sketch.main, true);
+    addEditor("main", msg.sketch.main, "x-shader/x-fragment", true);
     editors["main"].editor.cm.doc.setValue(msg.sketch.main);
     // Optional: calc shader
     let calcGlsl = null;
     if (msg.sketch.hasOwnProperty("calc")) calcGlsl = msg.sketch.calc;
     if (calcGlsl) {
-      addEditor("calc", msg.sketch.calc, false);
+      addEditor("calc", msg.sketch.calc, "x-shader/x-fragment", false);
       editors["calc"].editor.cm.doc.setValue(msg.sketch.calc);
+    }
+    // Optional: JS control
+    let ctrlJs = null;
+    if (msg.sketch.hasOwnProperty("ctrl")) ctrlJs = msg.sketch.ctrl;
+    if (ctrlJs) {
+      addEditor("ctrl", msg.sketch.ctrl, "javascript", false);
+      editors["ctrl"].editor.cm.doc.setValue(msg.sketch.ctrl);
     }
     // Set sizes
     updateResolution();
