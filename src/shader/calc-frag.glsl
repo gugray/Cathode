@@ -1,6 +1,8 @@
 #version 300 es
 precision highp float;
 
+#include "random.glsl"
+
 #define TX_DATA_SZ 16
 
 uniform sampler2D txPrev;

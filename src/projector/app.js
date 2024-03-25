@@ -16,6 +16,7 @@ setTimeout(init, 50);
 
 let hiDef = false;
 let audio;
+let volFactor = 0.02;
 let knobs = [0, 0, 0, 0, 0, 0, 0, 0];
 let webGLCanvas, gl, w, h;
 let sweepArrays, sweepBufferInfo;
@@ -35,8 +36,6 @@ let lastFrameTime = -1;
 function init() {
 
   audio = new Audio({});
-  audio.setCutoff(0.1);
-  audio.setScale(20);
 
   // 3D WebGL canvas, and twgl
   webGLCanvas = document.getElementById("webgl-canvas");
@@ -332,7 +331,7 @@ function frame(time) {
     txPrev: txData0,
     time: time,
     dt: deltaTime,
-    vol: audio.vol,
+    vol: audio.vol * volFactor,
     fft: audio.fft,
     beat: audio.isBeat ? 1 : 0,
     knobs: knobs,
@@ -361,7 +360,7 @@ function frame(time) {
     txClip0: clip0 ? clip0.tx : null,
     resolution: [w, h],
     time: time,
-    vol: audio.vol,
+    vol: audio.vol * volFactor,
     fft: audio.fft,
     beat: audio.isBeat ? 1 : 0,
     knobs: knobs,

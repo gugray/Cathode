@@ -14,5 +14,8 @@ uniform sampler2D txClip0;
 out vec4 outColor;
 
 #include "helpers.glsl"
+#include "random.glsl"
 #include "sdf.glsl"
+#include "spectrum.glsl"
+
 // MAIN.GLSL
