@@ -18,7 +18,6 @@ let hiDef = false;
 let audio;
 let volFactor = 0.02;
 let knobs = [0, 0, 0, 0, 0, 0, 0, 0];
-let ctrl;
 let webGLCanvas, gl, w, h;
 let sweepArrays, sweepBufferInfo;
 let progiMain, progiOutputDraw, progiCalc;
@@ -33,6 +32,9 @@ let sCalc;
 let animating = false;
 let animStartTime = -1;
 let lastFrameTime = -1;
+
+let ctrl;
+const ctrlContext = {};
 
 function init() {
 
@@ -112,7 +114,8 @@ function handleSocketMessage(msg) {
       return;
     updatePrograms([
       { name: "main", shaderCode: msg.sketch.main },
-      { name: "calc", shaderCode: msg.sketch.calc ?? null }
+      { name: "calc", shaderCode: msg.sketch.calc ?? null },
+      { name: "ctrl", shaderCode: msg.sketch.ctrl ?? null }
     ]);
     if (msg.sketch.clips.length > 0) {
       clip0 = makeEmptyClip();
@@ -235,6 +238,7 @@ function updatePrograms(infos) {
 }
 
 function updateControl(jsCode) {
+  if (!jsCode) return true;
   let compileOK = false;
   try {
     const fun = new Function(jsCode);
@@ -253,7 +257,11 @@ function updateControl(jsCode) {
 
 function makeDefaultCtrl() {
   return {
-
+    frame: function(ctxt) {
+      if (!ctxt.hasOwnProperty("frameIx")) ctxt.frameIx = -1;
+      ctxt.lastFrameIx = ctxt.frameIx;
+      ctxt.frameIx = Math.round(ctxt.time * 30 / 1000);
+    }
   };
 }
 
@@ -335,10 +343,17 @@ function frame(time) {
   lastFrameTime = time;
   time -= animStartTime;
 
+  // Fill current data into context
+  // Invoke context update
+  ctrlContext.time = time;
+  ctrlContext.nFrames = clip0.frames.length;
+  ctrlContext.volume = audio.vol;
+  ctrlContext.fft = audio.fft;
+  ctrl.frame(ctrlContext);
+
   // Feed movie frames
-  const frameIx = Math.round(time * 60 / 1000);
-  if (clip0 && clip0.tx && (frameIx % 2) == 0) {
-    const clipIx = (frameIx/2) % clip0.frames.length;
+  if (clip0 && clip0.tx && ctrlContext.lastFrameIx != ctrlContext.frameIx) {
+    const clipIx = (ctrlContext.frameIx) % clip0.frames.length;
     const data = clip0.frames[clipIx];
     gl.bindTexture(gl.TEXTURE_2D, clip0.tx);
     gl.texImage2D(

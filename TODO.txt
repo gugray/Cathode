@@ -19,5 +19,12 @@ Sketch ideas:
 
 home movie sailing fun https://archive.org/details/098511
 
+a: 342
+b: 266
+c: 333
+d: 494
+e: 684
 
-15:36 16:06
+712x480
+
+480x360
